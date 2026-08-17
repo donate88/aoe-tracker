@@ -846,6 +846,14 @@
       },
       mounted() {
         this.fetchInitialData();
+
+        // Tự động quét và cập nhật dữ liệu mới mỗi 5 giây (5000ms)
+            setInterval(() => {
+              // Chỉ tự động tải ngầm khi người dùng không mở các Modal nhập liệu
+              if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
+                this.fetchInitialData();
+              }
+            }, 5000);
       }
     }).mount('#app');
   </script>
