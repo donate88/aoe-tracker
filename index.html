@@ -43,7 +43,7 @@
       </div>
 
       <div class="flex items-center gap-2.5 flex-wrap">
-        <!-- HIGHLIGHT: Nút gửi ly nước cho Admin -->
+        <!-- Nút gửi ly nước cho Admin -->
         <button @click="showDonateModal = true" 
                 class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
           <span>🧋</span>
@@ -106,7 +106,7 @@
             <div class="flex items-center gap-2">
               <span class="text-[11px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ match.formattedTime }}</span>
               
-              <!-- NÚT XÓA KÈO NỔI BẬT CHO ADMIN -->
+              <!-- NÚT XÓA KÈO DÀNH CHO ADMIN -->
               <button v-if="isAdmin" 
                       @click.stop="deleteSingleMatch(match.id)" 
                       title="Xóa kèo đấu này vĩnh viễn" 
@@ -152,7 +152,7 @@
         </button>
 
         <div class="flex items-center gap-2 text-xs">
-          <!-- NÚT XÓA KÈO Ở TẠI MÀN HÌNH CHI TIẾT NẾU LÀ ADMIN -->
+          <!-- NÚT XÓA KÈO TẠI CHI TIẾT DÀNH CHO ADMIN -->
           <button v-if="isAdmin" 
                   @click="deleteSingleMatch(selectedMatch.id)" 
                   class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded flex items-center gap-1">
@@ -281,9 +281,20 @@
                   {{ g.winner === 'RED' ? 'Team Đỏ Thắng' : 'Team Xanh Thắng' }}
                 </span>
               </div>
-              <span class="text-[11px] text-slate-400">
-                Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
-              </span>
+              
+              <div class="flex items-center gap-3">
+                <span class="text-[11px] text-slate-400">
+                  Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
+                </span>
+
+                <!-- NÚT XÓA TRẬN NHẬP SAI -->
+                <button v-if="hasUpdatePermission || isAdmin" 
+                        @click="deleteGameFromMatch(idx)" 
+                        title="Xóa trận nhập sai này" 
+                        class="text-[10px] bg-red-950 hover:bg-red-800 text-red-300 border border-red-700/50 px-2 py-0.5 rounded transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i>Xóa
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/60 p-1.5 rounded">
@@ -526,7 +537,7 @@
           showLoginUpdaterModal: false,
           updaterPassInput: '',
 
-          players: [],
+          players: [], // Đặt rỗng để tự động tải từ Google Sheet
 
           civs: [
             { name: "Cartha", type: "chém" }, { name: "Choson", type: "chém" }, { name: "Greek", type: "chém" },
@@ -660,7 +671,7 @@
           }
         },
 
-        // XÓA 1 KÈO ĐẤU BẤT KỲ CỦA ADMIN
+        // XÓA 1 KÈO ĐẤU CỦA ADMIN
         async deleteSingleMatch(matchId) {
           if (!this.isAdmin) {
             this.showNotify("Chỉ Admin mới có quyền xóa kèo đấu!", "error");
@@ -683,6 +694,20 @@
                 body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
               });
             }
+          }
+        },
+
+        // XÓA 1 TRẬN ĐẤU NHẬP SAI TRONG BẢNG LỊCH SỬ
+        async deleteGameFromMatch(gameIndex) {
+          if (!this.hasUpdatePermission && !this.isAdmin) {
+            this.showNotify("Bạn không có quyền chỉnh sửa kèo này!", "error");
+            return;
+          }
+
+          if (confirm(`Bạn có chắc chắn muốn xóa kết quả Trận ${gameIndex + 1}?`)) {
+            this.selectedMatch.games.splice(gameIndex, 1);
+            await this.syncMatchToBackend(this.selectedMatch);
+            this.showNotify(`Đã xóa Trận ${gameIndex + 1} thành công! Bạn có thể nhập lại kết quả đúng.`);
           }
         },
 
@@ -895,6 +920,7 @@
       mounted() {
         this.fetchInitialData();
 
+        // Tự động làm mới dữ liệu ngầm sau mỗi 5 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
