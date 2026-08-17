@@ -573,17 +573,36 @@
           return list.filter(p => p !== '' && p !== null).length;
         },
 
-        getAvailablePlayers(teamSide, currentIdx) {
-          const selectedRed = this.newMatchForm.redTeam;
-          const selectedBlue = this.newMatchForm.blueTeam;
-
-          return this.players.filter(p => {
-            const name = p.name;
-            if (selectedRed.includes(name) && !(teamSide === 'red' && selectedRed[currentIdx] === name)) return false;
-            if (selectedBlue.includes(name) && !(teamSide === 'blue' && selectedBlue[currentIdx] === name)) return false;
-            return true;
-          });
-        },
+       // CẬP NHẬT HÀM getAvailablePlayers CHỐNG TRÙNG VÀ CHỐNG THAM GIA 2 KÈO LIVE CÙNG LÚC
+          getAvailablePlayers(teamSide, currentIdx) {
+            const selectedRed = this.newMatchForm.redTeam;
+            const selectedBlue = this.newMatchForm.blueTeam;
+          
+            // 1. Lấy danh sách tất cả các Player đang nằm trong các kèo đấu LIVE khác
+            const activePlayersInOtherLiveMatches = new Set();
+            this.matches.forEach(m => {
+              if (m.status === 'LIVE') {
+                [...(m.redTeam || []), ...(m.blueTeam || [])].forEach(p => {
+                  if (p) activePlayersInOtherLiveMatches.add(p);
+                });
+              }
+            });
+          
+            return this.players.filter(p => {
+              const name = p.name;
+          
+              // RULE 1: Không cho chọn người đang tham gia kèo LIVE khác
+              if (activePlayersInOtherLiveMatches.has(name)) {
+                return false;
+              }
+          
+              // RULE 2: Không trùng người ở các vị trí khác trong cùng kèo đấu đang tạo
+              if (selectedRed.includes(name) && !(teamSide === 'red' && selectedRed[currentIdx] === name)) return false;
+              if (selectedBlue.includes(name) && !(teamSide === 'blue' && selectedBlue[currentIdx] === name)) return false;
+          
+              return true;
+            });
+          },
 
         async fetchInitialData() {
           this.isLoading = true;
