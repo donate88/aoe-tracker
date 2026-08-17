@@ -2,105 +2,468 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>AOE Match Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AOE Match Tracker - Quản Lý Kèo Đấu Đế Chế</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Vue 3 CDN -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+    body {
+      font-family: 'Roboto Condensed', sans-serif;
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-white p-4">
-  <div id="app" class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold text-center text-amber-400 mb-6">AOE MATCH TRACKER</h1>
-
-    <!-- Form Tạo Kèo (Admin/User Đăng nhập) -->
-    <div class="bg-slate-800 p-4 rounded-lg mb-6 border border-slate-700">
-      <h2 class="text-xl font-bold mb-4 text-emerald-400">Tạo / Cập Nhật Kèo Đấu</h2>
-      
-      <div class="mb-4">
-        <label class="block mb-2">Thể thức:</label>
-        <select v-model="currentMatch.mode" class="bg-slate-700 p-2 rounded w-full">
-          <option value="1v1">1 vs 1</option>
-          <option value="2v2">2 vs 2</option>
-          <option value="4v4">4 vs 4</option>
-        </select>
-      </div>
-
-      <!-- Chọn Player -->
-      <div class="grid grid-cols-2 gap-4 mb-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="app" class="max-w-6xl mx-auto px-4 py-6">
+    
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-amber-500/30 p-4 rounded-xl shadow-lg mb-6 gap-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-amber-500 text-slate-950 p-3 rounded-lg font-black text-2xl">AOE</div>
         <div>
-          <h3 class="text-red-400 font-bold mb-2">Team Đỏ</h3>
-          <div v-for="(p, idx) in playerInputsCount" :key="'red-'+idx" class="mb-2">
-            <select v-model="currentMatch.redTeam[idx]" class="bg-slate-700 p-2 rounded w-full">
-              <option v-for="player in players" :value="player">{{ player }}</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <h3 class="text-blue-400 font-bold mb-2">Team Xanh</h3>
-          <div v-for="(p, idx) in playerInputsCount" :key="'blue-'+idx" class="mb-2">
-            <select v-model="currentMatch.blueTeam[idx]" class="bg-slate-700 p-2 rounded w-full">
-              <option v-for="player in players" :value="player">{{ player }}</option>
-            </select>
-          </div>
+          <h1 class="text-2xl font-bold text-amber-400 tracking-wide">AOE MATCH TRACKER</h1>
+          <p class="text-xs text-slate-400">Hệ thống quản lý & theo dõi kèo đấu Đế Chế Chuyên Nghiệp</p>
         </div>
       </div>
 
-      <!-- Nhập Trận Đấu Hiện Tại -->
-      <div class="border-t border-slate-700 pt-4 mb-4">
-        <h3 class="font-bold mb-2">Cập nhật trận {{ currentMatch.games.length + 1 }}</h3>
-        
-        <!-- Chọn Quân Đỏ -->
-        <div class="grid grid-cols-2 gap-4 mb-2">
-          <div>
-            <span class="text-sm text-red-300">Quân Team Đỏ:</span>
-            <div v-for="(p, i) in currentMatch.redTeam" :key="i" class="flex items-center gap-2 mt-1">
-              <span class="text-xs w-20 truncate">{{ p }}:</span>
-              <select v-model="currentGame.redCivs[i]" class="bg-slate-700 p-1 rounded text-sm w-full">
-                <option v-for="c in civs" :value="c.name">{{ c.name }} ({{ c.type }})</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <span class="text-sm text-blue-300">Quân Team Xanh:</span>
-            <div v-for="(p, i) in currentMatch.blueTeam" :key="i" class="flex items-center gap-2 mt-1">
-              <span class="text-xs w-20 truncate">{{ p }}:</span>
-              <select v-model="currentGame.blueCivs[i]" class="bg-slate-700 p-1 rounded text-sm w-full">
-                <option v-for="c in civs" :value="c.name">{{ c.name }} ({{ c.type }})</option>
-              </select>
-            </div>
-          </div>
-        </div>
+      <!-- Navigation & Admin Button -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <button @click="currentTab = 'matches'" 
+                :class="currentTab === 'matches' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+                class="px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+          <i class="fa-solid fa-list-check"></i> Danh Sách Kèo
+        </button>
 
-        <!-- Chọn Thắng & Thêm Trận -->
-        <div class="flex gap-4 items-center mt-3">
-          <label class="text-sm">Đội thắng:</label>
-          <button @click="currentGame.winner = 'RED'" :class="currentGame.winner === 'RED' ? 'bg-red-600' : 'bg-slate-700'" class="px-3 py-1 rounded">Team Đỏ</button>
-          <button @click="currentGame.winner = 'BLUE'" :class="currentGame.winner === 'BLUE' ? 'bg-blue-600' : 'bg-slate-700'" class="px-3 py-1 rounded">Team Xanh</button>
-          <button @click="addGame" class="bg-emerald-600 px-4 py-1 rounded font-bold ml-auto">+ Thêm Trận</button>
+        <button @click="openNewMatchModal" 
+                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle"></i> Tạo Kèo Mới
+        </button>
+
+        <!-- Admin Login / Logout Button -->
+        <button v-if="!isAdmin" @click="showAdminModal = true" 
+                class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-2 rounded-lg text-sm transition flex items-center gap-2">
+          <i class="fa-solid fa-lock"></i> Đăng Nhập Admin
+        </button>
+
+        <div v-else class="flex items-center gap-2 bg-slate-800 border border-emerald-500/50 px-3 py-1.5 rounded-lg">
+          <span class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-user-shield"></i> Admin</span>
+          <button @click="openPlayerManagement" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Quản lý Player</button>
+          <button @click="logoutAdmin" class="text-xs text-red-400 hover:text-red-300 ml-1"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
       </div>
+    </header>
 
-      <!-- Thống Kê Tỉ Lệ Cung Chém Hiện Tại -->
-      <div v-if="currentMatch.games.length > 0" class="bg-slate-900 p-3 rounded mb-4">
-        <div class="text-lg font-bold text-center mb-2">
-          Tỉ Số: <span class="text-red-400">{{ score.red }}</span> - <span class="text-blue-400">{{ score.blue }}</span>
-        </div>
-        <div class="text-sm text-center">
-          Tỉ lệ Cung - Chém tổng: 
-          <span class="text-cyan-400 font-bold">{{ totalCivStats.cung }} Cung</span> - 
-          <span class="text-yellow-400 font-bold">{{ totalCivStats.chem }} Chém</span>
-        </div>
-      </div>
-
-      <button @click="finishMatch" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 rounded">Kết Thúc & Lưu Kèo</button>
+    <!-- NOTIFICATION ALERT -->
+    <div v-if="notification" :class="notification.type === 'error' ? 'bg-red-900/80 border-red-500 text-red-200' : 'bg-emerald-900/80 border-emerald-500 text-emerald-200'" class="p-3 rounded-lg border mb-4 flex justify-between items-center text-sm">
+      <span><i :class="notification.type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-check'" class="fa-solid mr-2"></i>{{ notification.message }}</span>
+      <button @click="notification = null" class="text-slate-400 hover:text-white">&times;</button>
     </div>
+
+    <!-- MAIN CONTENT TAB 1: DANH SÁCH KÈO ĐẤU -->
+    <div v-if="currentTab === 'matches'" class="space-y-6">
+      <!-- Filter -->
+      <div class="flex justify-between items-center bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+        <div class="flex gap-2">
+          <button @click="filterStatus = 'ALL'" :class="filterStatus === 'ALL' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-400'" class="px-3 py-1.5 rounded-md text-xs">Tất cả ({{ matches.length }})</button>
+          <button @click="filterStatus = 'LIVE'" :class="filterStatus === 'LIVE' ? 'bg-red-600 text-white font-bold' : 'bg-slate-800 text-slate-400'" class="px-3 py-1.5 rounded-md text-xs">🔴 Đang diễn ra ({{ liveMatchesCount }})</button>
+          <button @click="filterStatus = 'FINISHED'" :class="filterStatus === 'FINISHED' ? 'bg-slate-700 text-white font-bold' : 'bg-slate-800 text-slate-400'" class="px-3 py-1.5 rounded-md text-xs">🏁 Đã kết thúc</button>
+        </div>
+        <button @click="fetchInitialData" class="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1">
+          <i class="fa-solid fa-rotate-right" :class="{'fa-spin': isLoading}"></i> Làm mới
+        </button>
+      </div>
+
+      <!-- Match Cards Grid -->
+      <div v-if="filteredMatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="match in filteredMatches" :key="match.id" 
+             @click="selectMatch(match)"
+             class="bg-slate-900 hover:border-amber-500/50 border border-slate-800 p-4 rounded-xl cursor-pointer transition shadow-md relative overflow-hidden group">
+          
+          <!-- Status Tag -->
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center gap-2">
+              <span class="font-bold px-2.5 py-0.5 rounded text-xs bg-slate-800 text-amber-400 border border-amber-500/20">
+                Thể thức: {{ match.mode }}
+              </span>
+              <span v-if="match.status === 'LIVE'" class="bg-red-600/90 text-white text-xs px-2 py-0.5 rounded font-bold animate-pulse">
+                🔴 TRỰC TIẾP
+              </span>
+              <span v-else class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded">
+                🏁 KẾT THÚC
+              </span>
+            </div>
+            <span class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ match.matchDate }} {{ match.matchTime }}</span>
+          </div>
+
+          <!-- Teams & Current Score -->
+          <div class="grid grid-cols-7 gap-2 items-center bg-slate-950/60 p-3 rounded-lg border border-slate-800/80 mb-3">
+            <!-- Red Team -->
+            <div class="col-span-3 text-right">
+              <div class="font-bold text-red-400 text-sm truncate">Team Đỏ</div>
+              <div class="text-xs text-slate-300 truncate">{{ match.redTeam.join(', ') }}</div>
+            </div>
+
+            <!-- Score -->
+            <div class="col-span-1 text-center font-black text-lg">
+              <span class="text-red-400">{{ getMatchScore(match).red }}</span>
+              <span class="text-slate-600 mx-0.5">-</span>
+              <span class="text-blue-400">{{ getMatchScore(match).blue }}</span>
+            </div>
+
+            <!-- Blue Team -->
+            <div class="col-span-3 text-left">
+              <div class="font-bold text-blue-400 text-sm truncate">Team Xanh</div>
+              <div class="text-xs text-slate-300 truncate">{{ match.blueTeam.join(', ') }}</div>
+            </div>
+          </div>
+
+          <!-- Match Summary Footer -->
+          <div class="flex justify-between items-center text-xs text-slate-400 border-t border-slate-800/80 pt-2">
+            <div><i class="fa-solid fa-gamepad mr-1"></i>Số trận: {{ match.games.length }}</div>
+            <div>
+              Tỉ lệ Cung - Chém: 
+              <span class="text-cyan-400 font-bold">{{ getMatchCivStats(match).cung }} Cung</span> - 
+              <span class="text-yellow-400 font-bold">{{ getMatchCivStats(match).chem }} Chém</span>
+            </div>
+            <div class="text-slate-500"><i class="fa-solid fa-user-pen mr-1"></i>{{ match.updatedBy || 'N/A' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="text-center py-12 bg-slate-900/40 rounded-xl border border-dashed border-slate-800">
+        <i class="fa-solid fa-trophy text-4xl text-slate-700 mb-3"></i>
+        <p class="text-slate-500">Chưa có kèo đấu nào. Hãy ấn nút "Tạo Kèo Mới" để bắt đầu!</p>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT TAB 2: CHI TIẾT & CẬP NHẬT KÈO ĐẤU -->
+    <div v-if="currentTab === 'detail' && selectedMatch" class="space-y-6">
+      <button @click="currentTab = 'matches'" class="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách kèo
+      </button>
+
+      <!-- Match Header Info -->
+      <div class="bg-slate-900 p-5 rounded-xl border border-amber-500/30 relative">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-bold text-amber-400">Chi Tiết Kèo Đấu {{ selectedMatch.mode }}</span>
+              <span v-if="selectedMatch.status === 'LIVE'" class="bg-red-600 text-white text-xs px-2.5 py-0.5 rounded font-bold animate-pulse">🔴 TRỰC TIẾP</span>
+              <span v-else class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded">🏁 KẾT THÚC CHUNG CUỘC</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+              <i class="fa-regular fa-calendar mr-1"></i> Ngày thi đấu: {{ selectedMatch.matchDate }} {{ selectedMatch.matchTime }} 
+              <span class="mx-2">|</span>
+              <i class="fa-solid fa-user-pen mr-1"></i> Người phụ trách update: <span class="text-amber-300 font-bold">{{ selectedMatch.updatedBy }}</span>
+            </p>
+          </div>
+
+          <!-- Overall Score & Ratio Banner -->
+          <div class="bg-slate-950 px-6 py-3 rounded-xl border border-slate-800 text-center">
+            <div class="text-xs text-slate-400 mb-0.5">TỈ SỐ TỔNG CHUNG CUỘC</div>
+            <div class="text-3xl font-black">
+              <span class="text-red-400">{{ activeMatchScore.red }}</span>
+              <span class="text-slate-600 mx-2">-</span>
+              <span class="text-blue-400">{{ activeMatchScore.blue }}</span>
+            </div>
+            <div class="text-xs mt-1">
+              Tổng tỉ lệ: 
+              <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }} Cung</span> - 
+              <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }} Chém</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams Grid -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-red-950/20 border border-red-900/40 p-3 rounded-lg">
+            <div class="text-xs text-red-400 font-bold uppercase tracking-wider mb-1">TEAM ĐỎ</div>
+            <div class="font-bold text-slate-200 text-base">{{ selectedMatch.redTeam.join(' - ') }}</div>
+          </div>
+          <div class="bg-blue-950/20 border border-blue-900/40 p-3 rounded-lg">
+            <div class="text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">TEAM XANH</div>
+            <div class="font-bold text-slate-200 text-base">{{ selectedMatch.blueTeam.join(' - ') }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM CẬP NHẬT TRẬN MỚI (Chỉ hiển thị nếu Kèo đang LIVE) -->
+      <div v-if="selectedMatch.status === 'LIVE'" class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+        <h3 class="text-base font-bold text-emerald-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+          <i class="fa-solid fa-gamepad"></i> Cập Nhật Kết Quả Trận {{ selectedMatch.games.length + 1 }}
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <!-- Civs Team Đỏ -->
+          <div class="space-y-3 bg-slate-950/50 p-3 rounded-lg border border-red-900/30">
+            <span class="text-xs text-red-400 font-bold block mb-1">Chọn quân Team Đỏ:</span>
+            <div v-for="(p, i) in selectedMatch.redTeam" :key="'red-civ-'+i" class="flex items-center gap-2">
+              <span class="text-xs w-28 truncate text-slate-300 font-medium">{{ p }}:</span>
+              <select v-model="currentGame.redCivs[i]" class="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full focus:outline-none focus:border-red-500">
+                <option value="" disabled>-- Chọn quân --</option>
+                <option v-for="c in civs" :value="c.name" :key="c.name">
+                  {{ c.name }} ({{ c.type }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Civs Team Xanh -->
+          <div class="space-y-3 bg-slate-950/50 p-3 rounded-lg border border-blue-900/30">
+            <span class="text-xs text-blue-400 font-bold block mb-1">Chọn quân Team Xanh:</span>
+            <div v-for="(p, i) in selectedMatch.blueTeam" :key="'blue-civ-'+i" class="flex items-center gap-2">
+              <span class="text-xs w-28 truncate text-slate-300 font-medium">{{ p }}:</span>
+              <select v-model="currentGame.blueCivs[i]" class="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full focus:outline-none focus:border-blue-500">
+                <option value="" disabled>-- Chọn quân --</option>
+                <option v-for="c in civs" :value="c.name" :key="c.name">
+                  {{ c.name }} ({{ c.type }})
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- WINNER SELECTION (MẶC ĐỊNH LÀ NULL ĐỂ BẮT BUỘC NGƯỜI DÙNG PHẢI BẤM CHỌN) -->
+        <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-amber-400">Đội Thắng Trận Này:</span>
+            <div class="flex gap-2">
+              <button @click="currentGame.winner = 'RED'" 
+                      :class="currentGame.winner === 'RED' ? 'bg-red-600 ring-2 ring-red-400 font-bold text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'"
+                      class="px-4 py-2 rounded-lg text-sm transition">
+                🔴 Team Đỏ Thắng
+              </button>
+              <button @click="currentGame.winner = 'BLUE'" 
+                      :class="currentGame.winner === 'BLUE' ? 'bg-blue-600 ring-2 ring-blue-400 font-bold text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'"
+                      class="px-4 py-2 rounded-lg text-sm transition">
+                🔵 Team Xanh Thắng
+              </button>
+            </div>
+          </div>
+
+          <button @click="addGameToMatch" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-lg text-sm transition shadow-md">
+            <i class="fa-solid fa-plus mr-1"></i> Cập Nhật Kết Quả Trận
+          </button>
+        </div>
+
+        <!-- Finish Kèo Button -->
+        <div class="mt-4 border-t border-slate-800 pt-4 flex justify-end">
+          <button @click="finishMatch" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-sm transition shadow-lg">
+            <i class="fa-solid fa-flag-checkered mr-1"></i> Kết Thúc Kèo Đấu Đêm Nay
+          </button>
+        </div>
+      </div>
+
+      <!-- DETAILED MATCH HISTORY & GAME BREAKDOWN -->
+      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+        <h3 class="text-base font-bold text-amber-400 mb-4 flex items-center justify-between border-b border-slate-800 pb-2">
+          <span><i class="fa-solid fa-clock-rotate-left mr-2"></i> Lịch Sử Chi Tiết Các Trận Đã Đấu</span>
+          <span class="text-xs font-normal text-slate-400">Tổng: {{ selectedMatch.games.length }} trận</span>
+        </h3>
+
+        <div v-if="selectedMatch.games.length > 0" class="space-y-3">
+          <div v-for="(g, idx) in selectedMatch.games" :key="idx" 
+               class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 hover:border-slate-700 transition">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-3 border-b border-slate-900 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-amber-400 text-sm">Trận {{ idx + 1 }}:</span>
+                <span v-if="g.winner === 'RED'" class="bg-red-950 text-red-400 border border-red-800/50 text-xs px-2.5 py-0.5 rounded font-bold">
+                  🏆 TEAM ĐỎ THẮNG
+                </span>
+                <span v-else class="bg-blue-950 text-blue-400 border border-blue-800/50 text-xs px-2.5 py-0.5 rounded font-bold">
+                  🏆 TEAM XANH THẮNG
+                </span>
+              </div>
+
+              <!-- Single Game Cung - Chém Ratio -->
+              <div class="text-xs bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
+                Tỉ lệ Cung - Chém trận này: 
+                <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - 
+                <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
+              </div>
+            </div>
+
+            <!-- Players Civ Breakdown -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Team Đỏ Civs -->
+              <div class="space-y-1">
+                <div class="text-xs text-red-400 font-semibold mb-1">Team Đỏ:</div>
+                <div v-for="(p, pi) in selectedMatch.redTeam" :key="'g-red-'+pi" class="flex justify-between items-center bg-slate-900/60 px-3 py-1.5 rounded text-xs">
+                  <span class="text-slate-300 font-medium">{{ p }}</span>
+                  <span :class="getCivTypeClass(g.redCivs[pi])" class="px-2 py-0.5 rounded font-bold text-[11px]">
+                    {{ g.redCivs[pi] || 'Chưa chọn' }} ({{ getCivType(g.redCivs[pi]) }})
+                  </span>
+                </div>
+              </div>
+
+              <!-- Team Xanh Civs -->
+              <div class="space-y-1">
+                <div class="text-xs text-blue-400 font-semibold mb-1">Team Xanh:</div>
+                <div v-for="(p, pi) in selectedMatch.blueTeam" :key="'g-blue-'+pi" class="flex justify-between items-center bg-slate-900/60 px-3 py-1.5 rounded text-xs">
+                  <span class="text-slate-300 font-medium">{{ p }}</span>
+                  <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-2 py-0.5 rounded font-bold text-[11px]">
+                    {{ g.blueCivs[pi] || 'Chưa chọn' }} ({{ getCivType(g.blueCivs[pi]) }})
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div v-else class="text-center py-8 text-slate-500 text-sm">
+          Chưa có trận đấu nào được cập nhật cho kèo này.
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 1: TẠO KÈO ĐẤU MỚI -->
+    <div v-if="showNewMatchModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="text-lg font-bold text-amber-400"><i class="fa-solid fa-square-plus mr-2"></i>Tạo Kèo Đấu Mới</h3>
+          <button @click="showNewMatchModal = false" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <!-- Form Info -->
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Thể thức:</label>
+              <select v-model="newMatchForm.mode" @change="onModeChange" class="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full">
+                <option value="1v1">1 vs 1</option>
+                <option value="2v2">2 vs 2</option>
+                <option value="4v4">4 vs 4</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Người phụ trách update:</label>
+              <select v-model="newMatchForm.updatedBy" class="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full">
+                <option value="" disabled>-- Chọn player --</option>
+                <option v-for="p in players" :value="p" :key="p">{{ p }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Select Players Team Đỏ & Xanh -->
+          <div class="grid grid-cols-2 gap-4 pt-2">
+            <!-- Team Đỏ -->
+            <div class="space-y-2 bg-red-950/20 p-3 rounded-lg border border-red-900/30">
+              <span class="text-xs font-bold text-red-400 block">Team Đỏ ({{ newMatchForm.redTeam.length }} player):</span>
+              <div v-for="(p, i) in playerInputsCount" :key="'new-red-'+i">
+                <select v-model="newMatchForm.redTeam[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
+                  <option value="" disabled>-- Player {{ i + 1 }} --</option>
+                  <option v-for="player in players" :value="player" :key="player">{{ player }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Team Xanh -->
+            <div class="space-y-2 bg-blue-950/20 p-3 rounded-lg border border-blue-900/30">
+              <span class="text-xs font-bold text-blue-400 block">Team Xanh ({{ newMatchForm.blueTeam.length }} player):</span>
+              <div v-for="(p, i) in playerInputsCount" :key="'new-blue-'+i">
+                <select v-model="newMatchForm.blueTeam[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
+                  <option value="" disabled>-- Player {{ i + 1 }} --</option>
+                  <option v-for="player in players" :value="player" :key="player">{{ player }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 border-t border-slate-800 pt-4">
+          <button @click="showNewMatchModal = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">Hủy</button>
+          <button @click="createMatch" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold">Tạo & Bắt Đầu Kèo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: ADMIN LOGIN -->
+    <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-slate-900 border border-amber-500/30 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-amber-500/30">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h3 class="text-lg font-bold text-amber-400">Đăng Nhập Quản Trị Viên</h3>
+          <p class="text-xs text-slate-400">Nhập mật khẩu Admin để quản lý danh sách Game thủ</p>
+        </div>
+
+        <div>
+          <input type="password" v-model="adminPasswordInput" @keyup.enter="loginAdmin" placeholder="Nhập mật khẩu Admin..." class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm w-full text-center tracking-widest focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex gap-2">
+          <button @click="showAdminModal = false" class="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">Hủy</button>
+          <button @click="loginAdmin" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold">Xác Nhận</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: QUẢN LÝ PLAYER (DÀNH CHO ADMIN) -->
+    <div v-if="showPlayerManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="text-lg font-bold text-emerald-400"><i class="fa-solid fa-users-gear mr-2"></i>Quản Lý Danh Sách Player</h3>
+          <button @click="showPlayerManagerModal = false" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <!-- Form Thêm Player -->
+        <div class="flex gap-2">
+          <input type="text" v-model="newPlayerName" placeholder="Tên Game Thủ mới..." class="bg-slate-800 border border-slate-700 p-2 rounded text-sm flex-1">
+          <button @click="addPlayer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold">Thêm</button>
+        </div>
+
+        <!-- List Players -->
+        <div class="flex-1 overflow-y-auto space-y-2 pr-1 border-t border-b border-slate-800 py-3">
+          <div v-for="(p, index) in players" :key="index" class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+            <span class="text-sm font-medium text-slate-300">{{ p }}</span>
+            <div class="flex gap-1">
+              <button @click="editPlayer(index)" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded"><i class="fa-solid fa-pen"></i> Sửa</button>
+              <button @click="deletePlayer(index)" class="text-xs bg-red-950 hover:bg-red-900 text-red-400 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i> Xóa</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button @click="showPlayerManagerModal = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-xs font-bold">Đóng</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxgUfIv6bGZAoy3sTolzViRF7Xe0zTuAEMQiiVDpEiBvh39JQHoKypbOIB7nXMqTqUVaA/exec";
+    // THAY ĐƯỜNG DẪN GOOGLE APPS SCRIPT ĐÃ DEPLOY CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbzLH91v-zYIhiM8m6NZDrSovsXyxztfO8XAV_q-63AEeVMPopH793BnqfGESl4BB3gfng/exec";
 
     Vue.createApp({
       data() {
         return {
-          players: ["6789", "Ajax", "Apple", "BanhMiOnline", "BondBond", "C-mon", "Chemmatxa", "Chymka", "Dante", "DiemVuong", "Dz", "Haclong", "HN_6789", "JokoNam", "Khoai", "King", "Love", "Lucky", "Maico", "MMM", "Mr-Bá", "NgocTram", "NP", "Piano", "Pig", "Relax", "Shine", "Tiger", "Tomahawk", "Tovo", "TramAnh-VúTO", "Trình", "TrungUyKim", "VT-Hà Nát", "XO", "Zoro"],
+          currentTab: 'matches', // 'matches' | 'detail'
+          filterStatus: 'ALL', // 'ALL' | 'LIVE' | 'FINISHED'
+          isLoading: false,
+          notification: null,
+
+          // Admin logic
+          isAdmin: false,
+          showAdminModal: false,
+          adminPasswordInput: '',
+          showPlayerManagerModal: false,
+          newPlayerName: '',
+
+          // Data
+          players: [
+            "Ajax", "Apple", "BondBond", "C-mon",
+            "Dante", "DiemVuong","HN_6789", "JokoNam", 
+            "Lucky", "Maico", "NgocTram", "NP", "Piano", "Pig", "Shine", 
+            "Tiger", "Tomahawk", "Tovo", "Trình", "VT-Hà Nát", "XO", "Zoro"
+          ],
           civs: [
             { name: "Cartha", type: "chém" }, { name: "Choson", type: "chém" }, { name: "Greek", type: "chém" },
             { name: "Mace", type: "chém" }, { name: "Minoan", type: "chém" }, { name: "Persian", type: "chém" },
@@ -109,53 +472,278 @@
             { name: "Palmyran", type: "cung" }, { name: "Phoenic", type: "cung" }, { name: "Shang", type: "cung" },
             { name: "Sumer", type: "cung" }
           ],
-          currentMatch: { id: Date.now(), mode: '2v2', redTeam: [], blueTeam: [], games: [], status: 'LIVE' },
-          currentGame: { redCivs: [], blueCivs: [], winner: 'RED' }
+
+          matches: [],
+          selectedMatch: null,
+
+          // Form Tạo Kèo Mới
+          showNewMatchModal: false,
+          newMatchForm: {
+            mode: '2v2',
+            redTeam: ['', ''],
+            blueTeam: ['', ''],
+            updatedBy: ''
+          },
+
+          // Form thêm trận vào kèo hiện tại
+          currentGame: {
+            redCivs: [],
+            blueCivs: [],
+            winner: null // Không để mặc định để bắt buộc người chơi phải chọn
+          }
         }
       },
       computed: {
         playerInputsCount() {
-          if (this.currentMatch.mode === '1v1') return 1;
-          if (this.currentMatch.mode === '2v2') return 2;
+          if (this.newMatchForm.mode === '1v1') return 1;
+          if (this.newMatchForm.mode === '2v2') return 2;
           return 4;
         },
-        score() {
+        filteredMatches() {
+          if (this.filterStatus === 'ALL') return this.matches;
+          return this.matches.filter(m => m.status === this.filterStatus);
+        },
+        liveMatchesCount() {
+          return this.matches.filter(m => m.status === 'LIVE').length;
+        },
+        activeMatchScore() {
+          if (!this.selectedMatch) return { red: 0, blue: 0 };
+          return this.getMatchScore(this.selectedMatch);
+        },
+        activeMatchCivStats() {
+          if (!this.selectedMatch) return { cung: 0, chem: 0 };
+          return this.getMatchCivStats(this.selectedMatch);
+        }
+      },
+      methods: {
+        showNotify(msg, type = 'success') {
+          this.notification = { message: msg, type: type };
+          setTimeout(() => { this.notification = null; }, 4000);
+        },
+
+        // API Fetching
+        async fetchInitialData() {
+          this.isLoading = true;
+          try {
+            if (API_URL !== "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") {
+              const res = await fetch(API_URL + "?action=getInitialData");
+              const data = await res.json();
+              if (data.players && data.players.length) this.players = data.players;
+              if (data.matches) this.matches = data.matches;
+            }
+          } catch (e) {
+            console.error("Lỗi kết nối API:", e);
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        // Admin Actions
+        loginAdmin() {
+          if (this.adminPasswordInput === '00716441516') {
+            this.isAdmin = true;
+            this.showAdminModal = false;
+            this.adminPasswordInput = '';
+            this.showNotify("Đăng nhập Admin thành công!");
+          } else {
+            this.showNotify("Mật khẩu Admin không chính xác!", "error");
+          }
+        },
+        logoutAdmin() {
+          this.isAdmin = false;
+          this.showNotify("Đã đăng xuất khỏi tài khoản Admin.");
+        },
+        openPlayerManagement() {
+          this.showPlayerManagerModal = true;
+        },
+        async addPlayer() {
+          if (!this.newPlayerName.trim()) return;
+          const name = this.newPlayerName.trim();
+          if (this.players.includes(name)) {
+            this.showNotify("Game thủ này đã có trong danh sách!", "error");
+            return;
+          }
+          this.players.push(name);
+          this.newPlayerName = '';
+          this.syncPlayersToBackend();
+          this.showNotify(`Đã thêm game thủ ${name}`);
+        },
+        async editPlayer(index) {
+          const oldName = this.players[index];
+          const newName = prompt("Chỉnh sửa tên game thủ:", oldName);
+          if (newName && newName.trim() !== '') {
+            this.players[index] = newName.trim();
+            this.syncPlayersToBackend();
+            this.showNotify(`Đã cập nhật ${oldName} thành ${newName.trim()}`);
+          }
+        },
+        async deletePlayer(index) {
+          const name = this.players[index];
+          if (confirm(`Bạn có chắc chắn muốn xóa game thủ ${name}?`)) {
+            this.players.splice(index, 1);
+            this.syncPlayersToBackend();
+            this.showNotify(`Đã xóa game thủ ${name}`);
+          }
+        },
+        async syncPlayersToBackend() {
+          if (API_URL === "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+          try {
+            await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'savePlayers', players: this.players })
+            });
+          } catch(e) { console.error(e); }
+        },
+
+        // Match Actions
+        openNewMatchModal() {
+          this.newMatchForm = {
+            mode: '2v2',
+            redTeam: ['', ''],
+            blueTeam: ['', ''],
+            updatedBy: ''
+          };
+          this.showNewMatchModal = true;
+        },
+        onModeChange() {
+          const count = this.playerInputsCount;
+          this.newMatchForm.redTeam = Array(count).fill('');
+          this.newMatchForm.blueTeam = Array(count).fill('');
+        },
+        createMatch() {
+          // Validate
+          if (!this.newMatchForm.updatedBy) {
+            this.showNotify("Vui lòng chọn người phụ trách update kèo!", "error");
+            return;
+          }
+          if (this.newMatchForm.redTeam.some(p => !p) || this.newMatchForm.blueTeam.some(p => !p)) {
+            this.showNotify("Vui lòng chọn đầy đủ game thủ cho 2 đội!", "error");
+            return;
+          }
+
+          const now = new Date();
+          const matchDate = now.toLocaleDateString('vi-VN');
+          const matchTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+          const newMatch = {
+            id: 'MATCH_' + Date.now(),
+            mode: this.newMatchForm.mode,
+            redTeam: [...this.newMatchForm.redTeam],
+            blueTeam: [...this.newMatchForm.blueTeam],
+            updatedBy: this.newMatchForm.updatedBy,
+            matchDate: matchDate,
+            matchTime: matchTime,
+            status: 'LIVE',
+            games: []
+          };
+
+          this.matches.unshift(newMatch);
+          this.selectedMatch = newMatch;
+          this.showNewMatchModal = false;
+          this.currentTab = 'detail';
+          this.resetCurrentGame();
+          this.syncMatchToBackend(newMatch);
+          this.showNotify("Đã khởi tạo kèo đấu thành công!");
+        },
+
+        selectMatch(match) {
+          this.selectedMatch = match;
+          this.currentTab = 'detail';
+          this.resetCurrentGame();
+        },
+
+        resetCurrentGame() {
+          const count = this.selectedMatch ? this.selectedMatch.redTeam.length : 2;
+          this.currentGame = {
+            redCivs: Array(count).fill(''),
+            blueCivs: Array(count).fill(''),
+            winner: null
+          };
+        },
+
+        // THÊM TRẬN ĐẤU VÀO KÈO (KIỂM TRA BẮT BUỘC ĐỘI THẮNG)
+        addGameToMatch() {
+          if (!this.selectedMatch) return;
+
+          // Bắt lỗi nếu người dùng CHƯA CHỌN ĐỘI THẮNG
+          if (!this.currentGame.winner) {
+            alert("Vui lòng cập nhật đội thắng!");
+            return;
+          }
+
+          // Kiểm tra chọn quân đầy đủ
+          if (this.currentGame.redCivs.some(c => !c) || this.currentGame.blueCivs.some(c => !c)) {
+            alert("Vui lòng chọn đầy đủ quân cho tất cả các game thủ!");
+            return;
+          }
+
+          // Thêm trận vào lịch sử
+          this.selectedMatch.games.push(JSON.parse(JSON.stringify(this.currentGame)));
+          this.syncMatchToBackend(this.selectedMatch);
+          this.showNotify(`Đã thêm kết quả trận ${this.selectedMatch.games.length}!`);
+          this.resetCurrentGame();
+        },
+
+        async finishMatch() {
+          if (confirm("Xác nhận kết thúc kèo đấu này? Trạng thái sẽ chuyển thành Đã kết thúc.")) {
+            this.selectedMatch.status = 'FINISHED';
+            await this.syncMatchToBackend(this.selectedMatch);
+            this.showNotify("Đã lưu & kết thúc kèo đấu chung cuộc!");
+          }
+        },
+
+        async syncMatchToBackend(match) {
+          if (API_URL === "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+          try {
+            await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'saveMatch', match: match })
+            });
+          } catch(e) { console.error("Lỗi lưu dữ liệu:", e); }
+        },
+
+        // Helpers Calc
+        getCivType(civName) {
+          const found = this.civs.find(c => c.name === civName);
+          return found ? found.type : 'N/A';
+        },
+        getCivTypeClass(civName) {
+          const type = this.getCivType(civName);
+          if (type === 'cung') return 'bg-cyan-950 text-cyan-300 border border-cyan-800/50';
+          if (type === 'chém') return 'bg-yellow-950 text-yellow-300 border border-yellow-800/50';
+          return 'bg-slate-800 text-slate-400';
+        },
+        getGameCivStats(game) {
+          let cung = 0, chem = 0;
+          [...game.redCivs, ...game.blueCivs].forEach(civ => {
+            const type = this.getCivType(civ);
+            if (type === 'cung') cung++;
+            if (type === 'chém') chem++;
+          });
+          return { cung, chem };
+        },
+        getMatchScore(match) {
           let red = 0, blue = 0;
-          this.currentMatch.games.forEach(g => {
+          (match.games || []).forEach(g => {
             if (g.winner === 'RED') red++;
             if (g.winner === 'BLUE') blue++;
           });
           return { red, blue };
         },
-        totalCivStats() {
+        getMatchCivStats(match) {
           let cung = 0, chem = 0;
-          const getCivType = name => this.civs.find(c => c.name === name)?.type;
-          
-          this.currentMatch.games.forEach(g => {
-            [...g.redCivs, ...g.blueCivs].forEach(civ => {
-              if (getCivType(civ) === 'cung') cung++;
-              if (getCivType(civ) === 'chém') chem++;
-            });
+          (match.games || []).forEach(g => {
+            const stats = this.getGameCivStats(g);
+            cung += stats.cung;
+            chem += stats.chem;
           });
           return { cung, chem };
         }
       },
-      methods: {
-        addGame() {
-          this.currentMatch.games.push(JSON.parse(JSON.stringify(this.currentGame)));
-          this.currentGame.redCivs = [];
-          this.currentGame.blueCivs = [];
-        },
-        async finishMatch() {
-          this.currentMatch.status = 'FINISHED';
-          await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'saveMatch', match: this.currentMatch })
-          });
-          alert('Đã lưu kết quả kèo thành công!');
-        }
+      mounted() {
+        this.fetchInitialData();
       }
-    }).mount('#app')
+    }).mount('#app');
   </script>
 </body>
 </html>
