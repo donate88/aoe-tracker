@@ -43,7 +43,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5 flex-wrap">
+        <div class="flex items-center gap-2.5 flex-wrap z-10">
           <button @click="showDonateModal = true" 
                   class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
             <span>🧋</span>
@@ -62,8 +62,10 @@
           </button>
 
           <!-- Admin Status & Login -->
-          <button v-if="!isAdmin" @click="showAdminModal = true" 
-                  class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
+          <button v-if="!isAdmin" 
+                  @click="openAdminModal" 
+                  type="button"
+                  class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-lock"></i> Đăng Nhập Admin
           </button>
 
@@ -264,67 +266,67 @@
         </div>
 
         <!-- LỊCH SỬ CÁC TRẬN ĐẤU -->
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
-          <span><i class="fa-solid fa-list-ol mr-1.5"></i> Chi Tiết Bảng Lịch Sử Đấu</span>
-          <span class="text-xs font-normal text-slate-400">Tổng: {{ selectedMatch.games.length }} trận</span>
-        </h3>
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+          <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
+            <span><i class="fa-solid fa-list-ol mr-1.5"></i> Chi Tiết Bảng Lịch Sử Đấu</span>
+            <span class="text-xs font-normal text-slate-400">Tổng: {{ selectedMatch.games.length }} trận</span>
+          </h3>
 
-        <div v-if="selectedMatch.games.length > 0" class="space-y-3">
-          <div v-for="(g, idx) in selectedMatch.games" :key="idx" 
-               class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs shadow-md">
-            
-            <div class="flex justify-between items-center border-b border-slate-800/80 pb-2 mb-3">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
-                <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
-                  {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
-                </span>
-              </div>
+          <div v-if="selectedMatch.games.length > 0" class="space-y-3">
+            <div v-for="(g, idx) in selectedMatch.games" :key="idx" 
+                 class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs shadow-md">
               
-              <div class="flex items-center gap-3">
-                <span v-if="showCivStats" class="text-[11px] text-slate-400">
-                  Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
-                </span>
+              <div class="flex justify-between items-center border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
+                  <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
+                    {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
+                  </span>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                  <span v-if="showCivStats" class="text-[11px] text-slate-400">
+                    Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
+                  </span>
 
-                <button v-if="hasUpdatePermission || isAdmin" 
-                        @click="deleteGameFromMatch(idx)" 
-                        title="Xóa trận nhập sai này" 
-                        class="text-[10px] bg-red-950 hover:bg-red-800 text-red-300 border border-red-700/50 px-2 py-0.5 rounded transition">
-                  <i class="fa-solid fa-trash-can mr-1"></i>Xóa
-                </button>
+                  <button v-if="hasUpdatePermission || isAdmin" 
+                          @click="deleteGameFromMatch(idx)" 
+                          title="Xóa trận nhập sai này" 
+                          class="text-[10px] bg-red-950 hover:bg-red-800 text-red-300 border border-red-700/50 px-2 py-0.5 rounded transition">
+                    <i class="fa-solid fa-trash-can mr-1"></i>Xóa
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <!-- BẢNG QUÂN ĐỐI XỨNG NẰM CÙNG HÀNG THEO TỪNG PLAYER -->
-            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
-              <div class="grid grid-cols-2 gap-4 pb-2 border-b border-slate-800 text-[11px] font-bold">
-                <div class="text-red-400 text-center">TEAM ĐỎ</div>
-                <div class="text-blue-400 text-center">TEAM XANH</div>
-              </div>
+              <!-- BẢNG QUÂN ĐỐI XỨNG NẰM CÙNG HÀNG THEO TỪNG PLAYER -->
+              <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
+                <div class="grid grid-cols-2 gap-4 pb-2 border-b border-slate-800 text-[11px] font-bold">
+                  <div class="text-red-400 text-center">TEAM ĐỎ</div>
+                  <div class="text-blue-400 text-center">TEAM XANH</div>
+                </div>
 
-              <div class="divide-y divide-slate-800/50">
-                <div v-for="(p, pi) in selectedMatch.redTeam" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-1.5 items-center">
-                  <!-- Quân Team Đỏ (Căn phải hoặc Căn giữa) -->
-                  <div class="flex justify-center">
-                    <span :class="getCivTypeClass(g.redCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
-                      {{ g.redCivs[pi] || '---' }}
-                    </span>
-                  </div>
+                <div class="divide-y divide-slate-800/50">
+                  <div v-for="(p, pi) in selectedMatch.redTeam" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-1.5 items-center">
+                    <div class="flex justify-center">
+                      <span :class="getCivTypeClass(g.redCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
+                        {{ g.redCivs[pi] || '---' }}
+                      </span>
+                    </div>
 
-                  <!-- Quân Team Xanh (Căn trái hoặc Căn giữa) -->
-                  <div class="flex justify-center">
-                    <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
-                      {{ g.blueCivs[pi] || '---' }}
-                    </span>
+                    <div class="flex justify-center">
+                      <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
+                        {{ g.blueCivs[pi] || '---' }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
+          <div v-else class="text-center py-6 text-slate-500 text-xs">Chưa có trận đấu nào.</div>
         </div>
-        <div v-else class="text-center py-6 text-slate-500 text-xs">Chưa có trận đấu nào.</div>
+
       </div>
 
       <!-- MODAL 1: TẠO KÈO ĐẤU MỚI -->
@@ -458,10 +460,10 @@
       </div>
 
       <!-- MODAL 4: ADMIN LOGIN -->
-      <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3 text-center">
+      <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-50 z-[100]">
+        <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3 text-center shadow-2xl">
           <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-user-shield mr-1"></i> Đăng Nhập Admin</h3>
-          <input type="password" v-model="adminPasswordInput" @keyup.enter="loginAdmin" placeholder="Mật khẩu Admin..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full text-center">
+          <input type="password" v-model="adminPasswordInput" @keyup.enter="loginAdmin" placeholder="Mật khẩu Admin..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full text-center text-white">
           <div class="flex gap-2">
             <button @click="showAdminModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs">Hủy</button>
             <button @click="loginAdmin" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold rounded text-xs">Đăng Nhập</button>
@@ -565,7 +567,7 @@
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
           // APP BUILD INFO
-          appVersion: 'v1.7',
+          appVersion: 'v1.7.1',
           buildTime: '',
 
           currentTab: 'matches',
@@ -641,6 +643,10 @@
         }
       },
       methods: {
+        openAdminModal() {
+          this.adminPasswordInput = '';
+          this.showAdminModal = true;
+        },
         showNotify(msg, type = 'success') {
           this.notification = { message: msg, type: type };
           setTimeout(() => { this.notification = null; }, 4000);
@@ -1015,8 +1021,6 @@
         }
       },
       mounted() {
-
-        // Tự động lấy ngày giờ hiện tại dạng DD/MM/YYYY - HH:mm
         const now = new Date();
         const pad = n => n < 10 ? '0' + n : n;
         this.buildTime = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
