@@ -279,9 +279,16 @@
               <div class="flex justify-between items-center border-b border-slate-800/80 pb-2 mb-3">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
-                  <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
-                    {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
+                      {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
+                    </span>
+                    <button v-if="hasUpdatePermission || isAdmin" 
+                            @click="toggleWinner(g)" 
+                            class="text-[10px] bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30">
+                      Đổi đội thắng
+                    </button>
+                  </div>
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -306,7 +313,7 @@
                 </div>
 
                 <div class="divide-y divide-slate-800/50">
-                  <div v-for="(p, pi) in selectedMatch.redTeam" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-1.5 items-center">
+                  <div v-for="(p, pi) in (g.redCivs.length > g.blueCivs.length ? g.redCivs : g.blueCivs)" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-1.5 items-center">
                     <div class="flex justify-center">
                       <span :class="getCivTypeClass(g.redCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
                         {{ g.redCivs[pi] || '---' }}
@@ -460,7 +467,7 @@
       </div>
 
       <!-- MODAL 4: ADMIN LOGIN -->
-      <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-50 z-[100]">
+      <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3 text-center shadow-2xl">
           <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-user-shield mr-1"></i> Đăng Nhập Admin</h3>
           <input type="password" v-model="adminPasswordInput" @keyup.enter="loginAdmin" placeholder="Mật khẩu Admin..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full text-center text-white">
@@ -566,8 +573,7 @@
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
-          // APP BUILD INFO
-          appVersion: 'v1.7.1',
+          appVersion: 'v2.0-AutoSync',
           buildTime: '',
 
           currentTab: 'matches',
@@ -686,7 +692,13 @@
               const res = await fetch(API_URL + "?action=getInitialData");
               const data = await res.json();
               if (data.players && data.players.length) this.players = data.players;
-              if (data.matches) this.matches = data.matches;
+              if (data.matches) {
+                this.matches = data.matches;
+                if (this.selectedMatch) {
+                  const updated = this.matches.find(m => m.id === this.selectedMatch.id);
+                  if (updated) this.selectedMatch = updated;
+                }
+              }
               if (data.showCivStats !== undefined) {
                 const cloudCivStats = (data.showCivStats === true || data.showCivStats === "true");
                 this.showCivStats = cloudCivStats;
@@ -699,6 +711,12 @@
           } finally {
             this.isLoading = false;
           }
+        },
+
+        async toggleWinner(game) {
+          game.winner = game.winner === 'RED' ? 'BLUE' : 'RED';
+          await this.syncMatchToBackend(this.selectedMatch);
+          this.showNotify("Đã đổi kết quả đội thắng!");
         },
 
         async toggleCivStats() {
@@ -801,7 +819,7 @@
           if (confirm(`Bạn có chắc chắn muốn xóa kết quả Trận ${gameIndex + 1}?`)) {
             this.selectedMatch.games.splice(gameIndex, 1);
             await this.syncMatchToBackend(this.selectedMatch);
-            this.showNotify(`Đã xóa Trận ${gameIndex + 1} thành công! Bạn có thể nhập lại kết quả đúng.`);
+            this.showNotify(`Đã xóa Trận ${gameIndex + 1} thành công!`);
           }
         },
 
@@ -1027,11 +1045,12 @@
         
         this.fetchInitialData();
 
+        // Tự động kiểm tra dữ liệu từ Google Apps Script mỗi 3 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
           }
-        }, 5000);
+        }, 3000);
       }
     }).mount('#app');
   </script>
