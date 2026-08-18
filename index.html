@@ -43,7 +43,6 @@
       </div>
 
       <div class="flex items-center gap-2.5 flex-wrap">
-        <!-- Nút gửi ly nước cho Admin -->
         <button @click="showDonateModal = true" 
                 class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
           <span>🧋</span>
@@ -105,8 +104,6 @@
             
             <div class="flex items-center gap-2">
               <span class="text-[11px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ match.formattedTime }}</span>
-              
-              <!-- NÚT XÓA KÈO DÀNH CHO ADMIN -->
               <button v-if="isAdmin" 
                       @click.stop="deleteSingleMatch(match.id)" 
                       title="Xóa kèo đấu này vĩnh viễn" 
@@ -134,7 +131,9 @@
 
           <div class="flex justify-between items-center text-[11px] text-slate-400 border-t border-slate-800/80 pt-2">
             <div>Số trận: <span class="font-bold text-slate-200">{{ match.games.length }}</span></div>
-            <div>Cung-Chém: <span class="text-cyan-400 font-bold">{{ getMatchCivStats(match).cung }}</span> - <span class="text-yellow-400 font-bold">{{ getMatchCivStats(match).chem }}</span></div>
+            <div v-if="showCivStats">
+              Cung-Chém: <span class="text-cyan-400 font-bold">{{ getMatchCivStats(match).cung }}</span> - <span class="text-yellow-400 font-bold">{{ getMatchCivStats(match).chem }}</span>
+            </div>
             <div><i class="fa-solid fa-user-pen mr-1"></i>{{ match.updatedBy }}</div>
           </div>
         </div>
@@ -152,7 +151,6 @@
         </button>
 
         <div class="flex items-center gap-2 text-xs">
-          <!-- NÚT XÓA KÈO TẠI CHI TIẾT DÀNH CHO ADMIN -->
           <button v-if="isAdmin" 
                   @click="deleteSingleMatch(selectedMatch.id)" 
                   class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded flex items-center gap-1">
@@ -188,7 +186,7 @@
             <div class="text-2xl font-black">
               <span class="text-red-400">{{ activeMatchScore.red }}</span> - <span class="text-blue-400">{{ activeMatchScore.blue }}</span>
             </div>
-            <div class="text-[11px] text-slate-400">
+            <div v-if="showCivStats" class="text-[11px] text-slate-400">
               Tổng Cung - Chém: <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }}</span> - <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }}</span>
             </div>
           </div>
@@ -271,23 +269,23 @@
           <span class="text-xs font-normal text-slate-400">Tổng: {{ selectedMatch.games.length }} trận</span>
         </h3>
 
-        <div v-if="selectedMatch.games.length > 0" class="space-y-2">
+        <div v-if="selectedMatch.games.length > 0" class="space-y-3">
           <div v-for="(g, idx) in selectedMatch.games" :key="idx" 
-               class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs">
-            <div class="flex justify-between items-center mb-1.5">
+               class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs shadow-md">
+            
+            <div class="flex justify-between items-center border-b border-slate-800/80 pb-2 mb-2">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-amber-400">Trận {{ idx + 1 }}:</span>
+                <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
                 <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
-                  {{ g.winner === 'RED' ? 'Team Đỏ Thắng' : 'Team Xanh Thắng' }}
+                  {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
                 </span>
               </div>
               
               <div class="flex items-center gap-3">
-                <span class="text-[11px] text-slate-400">
+                <span v-if="showCivStats" class="text-[11px] text-slate-400">
                   Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
                 </span>
 
-                <!-- NÚT XÓA TRẬN NHẬP SAI -->
                 <button v-if="hasUpdatePermission || isAdmin" 
                         @click="deleteGameFromMatch(idx)" 
                         title="Xóa trận nhập sai này" 
@@ -297,20 +295,32 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/60 p-1.5 rounded">
-              <div class="truncate">
-                <span class="text-red-400 font-semibold mr-1">Đỏ:</span>
-                <span v-for="(c, ci) in g.redCivs" :key="'rc-'+ci" :class="getCivTypeClass(c)" class="px-1 rounded mr-1">
-                  {{ c }}
-                </span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              <div class="bg-red-950/20 p-2 rounded-lg border border-red-900/30">
+                <div class="font-bold text-red-400 text-[11px] mb-1">TEAM ĐỎ</div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <div v-for="(p, pi) in selectedMatch.redTeam" :key="'rp-'+pi" class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                    <span class="text-slate-300 font-semibold text-[11px]">{{ p }}:</span>
+                    <span :class="getCivTypeClass(g.redCivs[pi])" class="px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      {{ g.redCivs[pi] || '---' }}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="truncate">
-                <span class="text-blue-400 font-semibold mr-1">Xanh:</span>
-                <span v-for="(c, ci) in g.blueCivs" :key="'bc-'+ci" :class="getCivTypeClass(c)" class="px-1 rounded mr-1">
-                  {{ c }}
-                </span>
+
+              <div class="bg-blue-950/20 p-2 rounded-lg border border-blue-900/30">
+                <div class="font-bold text-blue-400 text-[11px] mb-1">TEAM XANH</div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <div v-for="(p, pi) in selectedMatch.blueTeam" :key="'bp-'+pi" class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                    <span class="text-slate-300 font-semibold text-[11px]">{{ p }}:</span>
+                    <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      {{ g.blueCivs[pi] || '---' }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
         <div v-else class="text-center py-6 text-slate-500 text-xs">Chưa có trận đấu nào.</div>
@@ -349,7 +359,6 @@
             <input type="password" v-model="newMatchForm.updaterPassword" placeholder="Nhập mật khẩu do Admin cấp..." class="bg-slate-800 border border-amber-500/50 p-2 rounded text-xs w-full">
           </div>
 
-          <!-- LIÊN HỆ CẤP QUYỀN -->
           <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-[11px] text-slate-400">
             <div class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Liên hệ cấp quyền/mật khẩu tạo kèo:</div>
             <div class="flex items-center gap-3">
@@ -460,7 +469,7 @@
       </div>
     </div>
 
-    <!-- MODAL 5: QUẢN LÝ PLAYER & DỌN DẸP (ADMIN ONLY) -->
+    <!-- MODAL 5: QUẢN LÝ PLAYER & CẤU HÌNH ADMIN -->
     <div v-if="showPlayerManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -468,6 +477,31 @@
           <button @click="showPlayerManagerModal = false" class="text-slate-400 hover:text-white">&times;</button>
         </div>
 
+        <!-- CẤU HÌNH BẬT/TẮT CUNG CHÉM -->
+        <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-chart-pie mr-1"></i> Hiển Thị Thông Số Cung - Chém</span>
+            <span class="text-[10px] text-slate-400">Ẩn/hiện chỉ số tỉ lệ Cung-Chém trên toàn giao diện</span>
+          </div>
+          <button @click="toggleCivStats" 
+                  :class="showCivStats ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-800 text-slate-400'" 
+                  class="px-3 py-1 rounded-full text-xs border border-slate-700 transition">
+            {{ showCivStats ? 'ON (Đang Hiện)' : 'OFF (Đang Ẩn)' }}
+          </button>
+        </div>
+
+        <!-- ĐỔI MẬT KHẨU ADMIN LƯU TRÊN GOOGLE SHEET -->
+        <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 space-y-2">
+          <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-key mr-1"></i> Mật Khẩu Đăng Nhập Admin:</span>
+          <div class="flex items-center gap-2">
+            <input type="text" v-model="adminPasswordConfig" placeholder="Mật khẩu Admin mới..." class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs flex-1">
+            <button @click="saveAdminPassword" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded text-xs transition">
+              Đổi Mật Khẩu
+            </button>
+          </div>
+        </div>
+
+        <!-- DỌN DẸP LỊCH SỬ -->
         <div class="bg-slate-950 p-3 rounded-lg border border-red-900/40 space-y-2">
           <span class="text-xs font-bold text-red-400 block"><i class="fa-solid fa-broom mr-1"></i> Dọn Dẹp / Xóa Kèo Đã Kết Thúc:</span>
           <div class="flex items-center gap-2">
@@ -484,6 +518,7 @@
           </div>
         </div>
 
+        <!-- QUẢN LÝ PLAYER -->
         <div class="space-y-2">
           <span class="text-xs font-bold text-emerald-400 block"><i class="fa-solid fa-user-plus mr-1"></i> Quản Lý Player & Pass:</span>
           <div class="grid grid-cols-5 gap-2">
@@ -528,16 +563,19 @@
           isAdmin: false,
           showAdminModal: false,
           adminPasswordInput: '',
+          adminPasswordConfig: '00716441516', // LƯU VÀ CẶP NHẬT TỪ SHEET
           showPlayerManagerModal: false,
           newPlayerForm: { name: '', password: '' },
           cleanupDays: 1,
+
+          showCivStats: true,
 
           hasUpdatePermission: false,
           currentUpdater: '',
           showLoginUpdaterModal: false,
           updaterPassInput: '',
 
-          players: [], // Đặt rỗng để tự động tải từ Google Sheet
+          players: [],
 
           civs: [
             { name: "Cartha", type: "chém" }, { name: "Choson", type: "chém" }, { name: "Greek", type: "chém" },
@@ -623,11 +661,13 @@
         async fetchInitialData() {
           this.isLoading = true;
           try {
-            if (API_URL !== "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") {
+            if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
               const res = await fetch(API_URL + "?action=getInitialData");
               const data = await res.json();
               if (data.players && data.players.length) this.players = data.players;
               if (data.matches) this.matches = data.matches;
+              if (data.showCivStats !== undefined) this.showCivStats = data.showCivStats;
+              if (data.adminPassword) this.adminPasswordConfig = data.adminPassword;
             }
           } catch (e) {
             console.error("Lỗi API:", e);
@@ -636,8 +676,33 @@
           }
         },
 
+        async toggleCivStats() {
+          this.showCivStats = !this.showCivStats;
+          this.showNotify(this.showCivStats ? "Đã BẬT hiển thị thông số Cung - Chém" : "Đã TẮT hiển thị thông số Cung - Chém");
+          if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
+            await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
+            });
+          }
+        },
+
+        async saveAdminPassword() {
+          if (!this.adminPasswordConfig.trim()) {
+            this.showNotify("Mật khẩu Admin không được để rỗng!", "error");
+            return;
+          }
+          this.showNotify("Đã đổi mật khẩu Admin thành công!");
+          if (API_URL !== "https://script.google.com/macros/s/AKfycbwMlkeOEI3VpIWwg8wYUi6UNYX-evEoSrDoO8FPmvAMFGZ23Asr2S5iB2TQkddNR5U/exec") {
+            await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'saveAdminPassword', adminPassword: this.adminPasswordConfig.trim() })
+            });
+          }
+        },
+
         loginAdmin() {
-          if (this.adminPasswordInput === '00716441516') {
+          if (this.adminPasswordInput.trim() === this.adminPasswordConfig.trim()) {
             this.isAdmin = true;
             this.hasUpdatePermission = true;
             this.currentUpdater = 'Admin';
@@ -671,7 +736,6 @@
           }
         },
 
-        // XÓA 1 KÈO ĐẤU CỦA ADMIN
         async deleteSingleMatch(matchId) {
           if (!this.isAdmin) {
             this.showNotify("Chỉ Admin mới có quyền xóa kèo đấu!", "error");
@@ -680,15 +744,12 @@
 
           if (confirm("Bạn có chắc chắn muốn xóa vĩnh viễn kèo đấu này?")) {
             this.matches = this.matches.filter(m => m.id !== matchId);
-            
             if (this.selectedMatch && this.selectedMatch.id === matchId) {
               this.selectedMatch = null;
               this.currentTab = 'matches';
             }
-
             this.showNotify("Đã xóa kèo đấu thành công!");
-
-            if (API_URL !== "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") {
+            if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
               await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
@@ -697,7 +758,6 @@
           }
         },
 
-        // XÓA 1 TRẬN ĐẤU NHẬP SAI TRONG BẢNG LỊCH SỬ
         async deleteGameFromMatch(gameIndex) {
           if (!this.hasUpdatePermission && !this.isAdmin) {
             this.showNotify("Bạn không có quyền chỉnh sửa kèo này!", "error");
@@ -744,7 +804,7 @@
           this.matches = matchesToKeep;
           this.showNotify(`Đã dọn dẹp thành công ${deletedIds.length} kèo đấu cũ!`);
 
-          if (API_URL !== "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") {
+          if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
             await fetch(API_URL, {
               method: 'POST',
               body: JSON.stringify({ action: 'deleteMatches', matchIds: deletedIds })
@@ -772,7 +832,7 @@
           }
         },
         async syncPlayersToBackend() {
-          if (API_URL === "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+          if (API_URL === "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") return;
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'savePlayers', players: this.players }) });
         },
 
@@ -876,7 +936,7 @@
         },
 
         async syncMatchToBackend(match) {
-          if (API_URL === "DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+          if (API_URL === "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") return;
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveMatch', match: match }) });
         },
 
@@ -920,7 +980,6 @@
       mounted() {
         this.fetchInitialData();
 
-        // Tự động làm mới dữ liệu ngầm sau mỗi 5 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
