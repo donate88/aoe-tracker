@@ -563,7 +563,7 @@
           isAdmin: false,
           showAdminModal: false,
           adminPasswordInput: '',
-          adminPasswordConfig: '00716441516', // LƯU VÀ CẶP NHẬT TỪ SHEET
+          adminPasswordConfig: '00716441516',
           showPlayerManagerModal: false,
           newPlayerForm: { name: '', password: '' },
           cleanupDays: 1,
@@ -661,12 +661,14 @@
         async fetchInitialData() {
           this.isLoading = true;
           try {
-            if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
+            if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
               const res = await fetch(API_URL + "?action=getInitialData");
               const data = await res.json();
               if (data.players && data.players.length) this.players = data.players;
               if (data.matches) this.matches = data.matches;
-              if (data.showCivStats !== undefined) this.showCivStats = data.showCivStats;
+              if (data.showCivStats !== undefined) {
+                this.showCivStats = (data.showCivStats === true || data.showCivStats === "true");
+              }
               if (data.adminPassword) this.adminPasswordConfig = data.adminPassword;
             }
           } catch (e) {
@@ -679,7 +681,7 @@
         async toggleCivStats() {
           this.showCivStats = !this.showCivStats;
           this.showNotify(this.showCivStats ? "Đã BẬT hiển thị thông số Cung - Chém" : "Đã TẮT hiển thị thông số Cung - Chém");
-          if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
+          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
             await fetch(API_URL, {
               method: 'POST',
               body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
@@ -693,7 +695,7 @@
             return;
           }
           this.showNotify("Đã đổi mật khẩu Admin thành công!");
-          if (API_URL !== "https://script.google.com/macros/s/AKfycbwMlkeOEI3VpIWwg8wYUi6UNYX-evEoSrDoO8FPmvAMFGZ23Asr2S5iB2TQkddNR5U/exec") {
+          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
             await fetch(API_URL, {
               method: 'POST',
               body: JSON.stringify({ action: 'saveAdminPassword', adminPassword: this.adminPasswordConfig.trim() })
@@ -749,7 +751,7 @@
               this.currentTab = 'matches';
             }
             this.showNotify("Đã xóa kèo đấu thành công!");
-            if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
+            if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
               await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
@@ -804,7 +806,7 @@
           this.matches = matchesToKeep;
           this.showNotify(`Đã dọn dẹp thành công ${deletedIds.length} kèo đấu cũ!`);
 
-          if (API_URL !== "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") {
+          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
             await fetch(API_URL, {
               method: 'POST',
               body: JSON.stringify({ action: 'deleteMatches', matchIds: deletedIds })
@@ -832,7 +834,7 @@
           }
         },
         async syncPlayersToBackend() {
-          if (API_URL === "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") return;
+          if (!API_URL || API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) return;
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'savePlayers', players: this.players }) });
         },
 
@@ -936,7 +938,7 @@
         },
 
         async syncMatchToBackend(match) {
-          if (API_URL === "https://script.google.com/macros/s/AKfycbx1AyuGpM7TuTUvWuDnwfmbwsCpNq66baT9MbSuf_ijuJQ9pHzl0d-int3q1l_NSquXsQ/exec") return;
+          if (!API_URL || API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) return;
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveMatch', match: match }) });
         },
 
