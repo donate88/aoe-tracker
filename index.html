@@ -265,7 +265,7 @@
           </div>
         </div>
 
-        <!-- LỊCH SỬ CÁC TRẬN ĐẤU -->
+        <!-- LỊCH SỬ CÁC TRẬN ĐẤU (HIỂN THỊ CỘT ĐỐI XỨNG PLAYER - QUÂN) -->
         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
           <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
             <span><i class="fa-solid fa-list-ol mr-1.5"></i> Chi Tiết Bảng Lịch Sử Đấu</span>
@@ -305,26 +305,32 @@
                 </div>
               </div>
 
-              <!-- BẢNG QUÂN ĐỐI XỨNG NẰM CÙNG HÀNG THEO TỪNG PLAYER -->
-              <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
+              <!-- BẢNG QUÂN ĐỐI XỨNG NGANG THEO CẶP: PLAYER ĐỎ - QUÂN ĐỎ vs PLAYER XANH - QUÂN XANH -->
+              <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80 overflow-x-auto">
                 <div class="grid grid-cols-2 gap-4 pb-2 border-b border-slate-800 text-[11px] font-bold">
-                  <div class="text-red-400 text-center">TEAM ĐỎ</div>
+                  <div class="text-red-400 text-center border-r border-slate-800">TEAM ĐỎ</div>
                   <div class="text-blue-400 text-center">TEAM XANH</div>
                 </div>
 
                 <div class="divide-y divide-slate-800/50">
-                  <div v-for="(p, pi) in (g.redCivs.length > g.blueCivs.length ? g.redCivs : g.blueCivs)" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-1.5 items-center">
-                    <div class="flex justify-center">
-                      <span :class="getCivTypeClass(g.redCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
+                  <div v-for="(p, pi) in getGameRowLoop(selectedMatch, g)" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-2 items-center text-xs">
+                    
+                    <!-- Cột Team Đỏ: Player + Quân -->
+                    <div class="flex items-center justify-between pr-2 border-r border-slate-800">
+                      <span class="font-bold text-red-300 truncate max-w-[120px]">{{ selectedMatch.redTeam[pi] || ('Player ' + (pi + 1)) }}:</span>
+                      <span :class="getCivTypeClass(g.redCivs[pi])" class="px-2.5 py-0.5 rounded text-[11px] font-bold min-w-[70px] text-center shadow-sm">
                         {{ g.redCivs[pi] || '---' }}
                       </span>
                     </div>
 
-                    <div class="flex justify-center">
-                      <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-3 py-1 rounded text-xs font-bold min-w-[90px] text-center shadow-sm">
+                    <!-- Cột Team Xanh: Player + Quân -->
+                    <div class="flex items-center justify-between pl-2">
+                      <span class="font-bold text-blue-300 truncate max-w-[120px]">{{ selectedMatch.blueTeam[pi] || ('Player ' + (pi + 1)) }}:</span>
+                      <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-2.5 py-0.5 rounded text-[11px] font-bold min-w-[70px] text-center shadow-sm">
                         {{ g.blueCivs[pi] || '---' }}
                       </span>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -351,6 +357,7 @@
                 <select v-model="newMatchForm.mode" @change="onModeChange" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
                   <option value="1v1">1 vs 1 (Cần 2 Players)</option>
                   <option value="2v2">2 vs 2 (Cần 4 Players)</option>
+                  <option value="3v3">3 vs 3 (Cần 6 Players)</option>
                   <option value="4v4">4 vs 4 (Cần 8 Players)</option>
                 </select>
               </div>
@@ -366,19 +373,6 @@
             <div v-if="!isAdmin && newMatchForm.updatedBy">
               <label class="block text-amber-400 mb-1">Mật khẩu người phụ trách ({{ newMatchForm.updatedBy }}):</label>
               <input type="password" v-model="newMatchForm.updaterPassword" placeholder="Nhập mật khẩu do Admin cấp..." class="bg-slate-800 border border-amber-500/50 p-2 rounded text-xs w-full">
-            </div>
-
-            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-[11px] text-slate-400">
-              <div class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Liên hệ cấp quyền/mật khẩu tạo kèo:</div>
-              <div class="flex items-center gap-3">
-                <a href="https://www.facebook.com/xoanks" target="_blank" class="text-blue-400 hover:underline flex items-center gap-1">
-                  <i class="fa-brands fa-facebook"></i> Facebook: xoanks
-                </a>
-                <span>|</span>
-                <a href="https://zalo.me/0868549555" target="_blank" class="text-cyan-400 hover:underline flex items-center gap-1">
-                  <i class="fa-solid fa-comment-dots"></i> Zalo: 0868549555
-                </a>
-              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-1">
@@ -450,15 +444,6 @@
           <p class="text-xs text-slate-400 text-center">Nhập mật khẩu của người phụ trách (<b>{{ selectedMatch.updatedBy }}</b>) để sửa kết quả.</p>
           <input type="password" v-model="updaterPassInput" @keyup.enter="verifyUpdaterPassword" placeholder="Mật khẩu cá nhân..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full text-center">
           
-          <div class="bg-slate-950 p-2 rounded border border-slate-800 text-[11px] text-slate-400 text-center space-y-1">
-            <div>Chưa có mật khẩu? Liên hệ Admin:</div>
-            <div class="flex justify-center gap-3">
-              <a href="https://www.facebook.com/xoanks" target="_blank" class="text-blue-400 hover:underline"><i class="fa-brands fa-facebook"></i> Facebook</a>
-              <span>|</span>
-              <a href="https://zalo.me/0868549555" target="_blank" class="text-cyan-400 hover:underline"><i class="fa-solid fa-comment-dots"></i> Zalo</a>
-            </div>
-          </div>
-
           <div class="flex gap-2">
             <button @click="showLoginUpdaterModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs">Hủy</button>
             <button @click="verifyUpdaterPassword" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold rounded text-xs">Xác Nhận</button>
@@ -567,13 +552,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwbmHLt7bGvXUXEd4svA973kK2oYrlq3M9I5DTt9VZwFJlDuZF4hM59vTZq-fzQOPf_/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw6eten3x4hiY07LqlGsrTFYcUsmi5nFyCmbhfCHDNtGcHMFJHSgCzorxuick0e5rJdUw/exec";
 
     Vue.createApp({
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
-          appVersion: 'v2.0-AutoSync',
+          appVersion: 'v2.1-AutoSync',
           buildTime: '',
 
           currentTab: 'matches',
@@ -632,6 +617,7 @@
         playerInputsCount() {
           if (this.newMatchForm.mode === '1v1') return 1;
           if (this.newMatchForm.mode === '2v2') return 2;
+          if (this.newMatchForm.mode === '3v3') return 3;
           return 4;
         },
         filteredMatches() {
@@ -649,6 +635,16 @@
         }
       },
       methods: {
+        getGameRowLoop(match, game) {
+          const maxLen = Math.max(
+            match.redTeam ? match.redTeam.length : 0,
+            match.blueTeam ? match.blueTeam.length : 0,
+            game.redCivs ? game.redCivs.length : 0,
+            game.blueCivs ? game.blueCivs.length : 0
+          );
+          return Array.from({ length: maxLen > 0 ? maxLen : 1 });
+        },
+
         openAdminModal() {
           this.adminPasswordInput = '';
           this.showAdminModal = true;
@@ -1045,7 +1041,7 @@
         
         this.fetchInitialData();
 
-        // Tự động kiểm tra dữ liệu từ Google Apps Script mỗi 3 giây
+        // Tự động đồng bộ với Google Apps Script mỗi 3 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
