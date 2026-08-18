@@ -163,8 +163,8 @@
             <span v-if="hasUpdatePermission" class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2.5 py-1 rounded">
               <i class="fa-solid fa-unlock mr-1"></i> Quyền Cập Nhật Active ({{ currentUpdater }})
             </span>
-            <button v-else-if="selectedMatch.status === 'LIVE'" @click="openLoginUpdaterModal" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1 rounded">
-              <i class="fa-solid fa-key mr-1"></i> Nhập Mật Khẩu Để Cập Nhật
+            <button v-else-if="selectedMatch.status === 'LIVE'" @click="openLoginUpdaterModal" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded">
+              <i class="fa-solid fa-key mr-1"></i> Nhập Mật Khẩu Để Cập Nhật & Kết Thúc
             </button>
           </div>
         </div>
@@ -184,14 +184,24 @@
               </p>
             </div>
 
-            <div class="bg-slate-950 px-5 py-2 rounded-xl border border-slate-800 text-center">
-              <div class="text-[10px] text-slate-400">TỈ SỐ CHUNG CUỘC</div>
-              <div class="text-2xl font-black">
-                <span class="text-red-400">{{ activeMatchScore.red }}</span> - <span class="text-blue-400">{{ activeMatchScore.blue }}</span>
+            <div class="flex items-center gap-3">
+              <div class="bg-slate-950 px-5 py-2 rounded-xl border border-slate-800 text-center">
+                <div class="text-[10px] text-slate-400">TỈ SỐ CHUNG CUỘC</div>
+                <div class="text-2xl font-black">
+                  <span class="text-red-400">{{ activeMatchScore.red }}</span> - <span class="text-blue-400">{{ activeMatchScore.blue }}</span>
+                </div>
+                <div v-if="showCivStats" class="text-[11px] text-slate-400">
+                  Tổng Cung - Chém: <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }}</span> - <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }}</span>
+                </div>
               </div>
-              <div v-if="showCivStats" class="text-[11px] text-slate-400">
-                Tổng Cung - Chém: <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }}</span> - <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }}</span>
-              </div>
+
+              <!-- Nút Kết Thúc Kèo (Cho Phép Admin hoặc Người Có Quyền Cập Nhật) -->
+              <button v-if="selectedMatch.status === 'LIVE' && (hasUpdatePermission || isAdmin)" 
+                      @click="finishMatch" 
+                      class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black px-4 py-3 rounded-xl shadow-lg border border-amber-400 flex items-center gap-2 text-xs">
+                <i class="fa-solid fa-flag-checkered text-base"></i>
+                <span>🏁 KẾT THÚC KÈO</span>
+              </button>
             </div>
           </div>
 
@@ -207,65 +217,7 @@
           </div>
         </div>
 
-        <!-- FORM CẬP NHẬT TRẬN -->
-        <div v-if="selectedMatch.status === 'LIVE' && hasUpdatePermission" class="bg-slate-900 p-4 rounded-xl border border-emerald-500/30">
-          <h3 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-1.5 border-b border-slate-800 pb-2">
-            <i class="fa-solid fa-gamepad"></i> Cập Nhật Trận {{ selectedMatch.games.length + 1 }}
-          </h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-red-900/30 space-y-2">
-              <span class="text-xs text-red-400 font-bold block">Quân Team Đỏ:</span>
-              <div v-for="(p, i) in selectedMatch.redTeam" :key="'r-'+i" class="flex items-center gap-2">
-                <span class="text-xs w-24 truncate text-slate-300">{{ p }}:</span>
-                <select v-model="currentGame.redCivs[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
-                  <option value="" disabled>-- Chọn quân --</option>
-                  <option v-for="c in civs" :value="c.name" :key="c.name">{{ c.name }} ({{ c.type }})</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-blue-900/30 space-y-2">
-              <span class="text-xs text-blue-400 font-bold block">Quân Team Xanh:</span>
-              <div v-for="(p, i) in selectedMatch.blueTeam" :key="'b-'+i" class="flex items-center gap-2">
-                <span class="text-xs w-24 truncate text-slate-300">{{ p }}:</span>
-                <select v-model="currentGame.blueCivs[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
-                  <option value="" disabled>-- Chọn quân --</option>
-                  <option v-for="c in civs" :value="c.name" :key="c.name">{{ c.name }} ({{ c.type }})</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-amber-400">Đội Thắng:</span>
-              <div class="flex gap-2">
-                <button @click="currentGame.winner = 'RED'" 
-                        :class="currentGame.winner === 'RED' ? 'bg-red-600 font-bold text-white shadow-lg' : 'bg-slate-800 text-slate-400'"
-                        class="px-3 py-1 rounded text-xs transition">
-                  🔴 Team Đỏ Thắng
-                </button>
-                <button @click="currentGame.winner = 'BLUE'" 
-                        :class="currentGame.winner === 'BLUE' ? 'bg-blue-600 font-bold text-white shadow-lg' : 'bg-slate-800 text-slate-400'"
-                        class="px-3 py-1 rounded text-xs transition">
-                  🔵 Team Xanh Thắng
-                </button>
-              </div>
-            </div>
-
-            <div class="flex gap-2 w-full md:w-auto">
-              <button @click="addGameToMatch" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 rounded text-xs">
-                + Cập Nhật Kết Quả Trận
-              </button>
-              <button @click="finishMatch" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-1.5 rounded text-xs">
-                🏁 Kết Thúc Kèo
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- LỊCH SỬ CÁC TRẬN ĐẤU (HIỂN THỊ CỘT ĐỐI XỨNG PLAYER - QUÂN) -->
+        <!-- LỊCH SỬ CÁC TRẬN ĐẤU -->
         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
           <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
             <span><i class="fa-solid fa-list-ol mr-1.5"></i> Chi Tiết Bảng Lịch Sử Đấu</span>
@@ -279,15 +231,22 @@
               <div class="flex justify-between items-center border-b border-slate-800/80 pb-2 mb-3">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
-                  <div class="flex items-center gap-2">
-                    <span :class="g.winner === 'RED' ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'">
-                      {{ g.winner === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng' }}
-                    </span>
-                    <button v-if="hasUpdatePermission || isAdmin" 
-                            @click="toggleWinner(g)" 
-                            class="text-[10px] bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30">
-                      Đổi đội thắng
+                  
+                  <!-- CẬP NHẬT TỈ SỐ / ĐỘI THẮNG DỄ DÀNG CHỈ BẰNG 1 CÚ CLICK -->
+                  <div class="flex items-center gap-1.5">
+                    <button @click="setWinner(g, 'RED')" 
+                            :class="g.winner === 'RED' ? 'bg-red-600 text-white font-bold ring-2 ring-red-400' : 'bg-slate-800 text-slate-400 hover:text-red-300'"
+                            class="px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1">
+                      🔴 Team Đỏ Thắng
                     </button>
+                    <button @click="setWinner(g, 'BLUE')" 
+                            :class="g.winner === 'BLUE' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-400' : 'bg-slate-800 text-slate-400 hover:text-blue-300'"
+                            class="px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1">
+                      🔵 Team Xanh Thắng
+                    </button>
+                    <span v-if="g.winner === 'PENDING'" class="text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded text-[10px] animate-pulse">
+                      ⏳ Chờ chọn đội thắng
+                    </span>
                   </div>
                 </div>
                 
@@ -305,7 +264,7 @@
                 </div>
               </div>
 
-              <!-- BẢNG QUÂN ĐỐI XỨNG NGANG THEO CẶP: PLAYER ĐỎ - QUÂN ĐỎ vs PLAYER XANH - QUÂN XANH -->
+              <!-- BẢNG QUÂN ĐỐI XỨNG PLAYER - QUÂN -->
               <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80 overflow-x-auto">
                 <div class="grid grid-cols-2 gap-4 pb-2 border-b border-slate-800 text-[11px] font-bold">
                   <div class="text-red-400 text-center border-r border-slate-800">TEAM ĐỎ</div>
@@ -315,7 +274,6 @@
                 <div class="divide-y divide-slate-800/50">
                   <div v-for="(p, pi) in getGameRowLoop(selectedMatch, g)" :key="'row-'+pi" class="grid grid-cols-2 gap-4 py-2 items-center text-xs">
                     
-                    <!-- Cột Team Đỏ: Player + Quân -->
                     <div class="flex items-center justify-between pr-2 border-r border-slate-800">
                       <span class="font-bold text-red-300 truncate max-w-[120px]">{{ selectedMatch.redTeam[pi] || ('Player ' + (pi + 1)) }}:</span>
                       <span :class="getCivTypeClass(g.redCivs[pi])" class="px-2.5 py-0.5 rounded text-[11px] font-bold min-w-[70px] text-center shadow-sm">
@@ -323,7 +281,6 @@
                       </span>
                     </div>
 
-                    <!-- Cột Team Xanh: Player + Quân -->
                     <div class="flex items-center justify-between pl-2">
                       <span class="font-bold text-blue-300 truncate max-w-[120px]">{{ selectedMatch.blueTeam[pi] || ('Player ' + (pi + 1)) }}:</span>
                       <span :class="getCivTypeClass(g.blueCivs[pi])" class="px-2.5 py-0.5 rounded text-[11px] font-bold min-w-[70px] text-center shadow-sm">
@@ -437,14 +394,28 @@
         </div>
       </div>
 
-      <!-- MODAL 3: NHẬP PASS CẬP NHẬT -->
+      <!-- MODAL 3: NHẬP TÊN PLAYER & PASS ĐỂ XÁC THỰC QỦYEN CẬP NHẬT / KẾT THÚC KÈO -->
       <div v-if="showLoginUpdaterModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3">
-          <h3 class="text-sm font-bold text-amber-400 text-center">Xác Thực Quyền Cập Nhật</h3>
-          <p class="text-xs text-slate-400 text-center">Nhập mật khẩu của người phụ trách (<b>{{ selectedMatch.updatedBy }}</b>) để sửa kết quả.</p>
-          <input type="password" v-model="updaterPassInput" @keyup.enter="verifyUpdaterPassword" placeholder="Mật khẩu cá nhân..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full text-center">
+          <h3 class="text-sm font-bold text-amber-400 text-center"><i class="fa-solid fa-user-lock mr-1"></i> Xác Thực Quyền Cập Nhật Kèo</h3>
+          <p class="text-xs text-slate-400 text-center">Chọn tên của bạn (Người phụ trách/Game thủ tham gia kèo) và nhập mật khẩu cá nhân.</p>
           
-          <div class="flex gap-2">
+          <div class="space-y-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Chọn Tên Người Phụ Trách / Game Thủ:</label>
+              <select v-model="updaterNameInput" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
+                <option value="" disabled>-- Chọn Tên Player --</option>
+                <option v-for="p in allowedUpdaters" :value="p" :key="p">{{ p }}</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Mật khẩu cá nhân:</label>
+              <input type="password" v-model="updaterPassInput" @keyup.enter="verifyUpdaterPassword" placeholder="Nhập mật khẩu..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-1">
             <button @click="showLoginUpdaterModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs">Hủy</button>
             <button @click="verifyUpdaterPassword" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold rounded text-xs">Xác Nhận</button>
           </div>
@@ -471,7 +442,6 @@
             <button @click="showPlayerManagerModal = false" class="text-slate-400 hover:text-white">&times;</button>
           </div>
 
-          <!-- CẤU HÌNH BẬT/TẮT CUNG CHÉM -->
           <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 flex justify-between items-center">
             <div>
               <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-chart-pie mr-1"></i> Hiển Thị Thông Số Cung - Chém</span>
@@ -484,7 +454,6 @@
             </button>
           </div>
 
-          <!-- ĐỔI MẬT KHẨU ADMIN LƯU TRÊN GOOGLE SHEET -->
           <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 space-y-2">
             <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-key mr-1"></i> Mật Khẩu Đăng Nhập Admin:</span>
             <div class="flex items-center gap-2">
@@ -495,7 +464,6 @@
             </div>
           </div>
 
-          <!-- DỌN DẸP LỊCH SỬ -->
           <div class="bg-slate-950 p-3 rounded-lg border border-red-900/40 space-y-2">
             <span class="text-xs font-bold text-red-400 block"><i class="fa-solid fa-broom mr-1"></i> Dọn Dẹp / Xóa Kèo Đã Kết Thúc:</span>
             <div class="flex items-center gap-2">
@@ -512,7 +480,6 @@
             </div>
           </div>
 
-          <!-- QUẢN LÝ PLAYER -->
           <div class="space-y-2">
             <span class="text-xs font-bold text-emerald-400 block"><i class="fa-solid fa-user-plus mr-1"></i> Quản Lý Player & Pass:</span>
             <div class="grid grid-cols-5 gap-2">
@@ -552,13 +519,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxR_spdwj_p0rmmGQbED_LP1bqYD6WfClrS9RiHhh_Tb5oIjWeNuphPpDinSTTuC4jl_A/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyaECDC91qWltOe69XJ3yjMYf9XD1DVEWdhlatqL0qc4XohLHHq1zGD_LG2fnhlBYVr/exec";
 
     Vue.createApp({
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
-          appVersion: 'v2.2',
+          appVersion: 'v2.2-SmartPermission',
           buildTime: '',
 
           currentTab: 'matches',
@@ -581,6 +548,7 @@
           hasUpdatePermission: false,
           currentUpdater: '',
           showLoginUpdaterModal: false,
+          updaterNameInput: '',
           updaterPassInput: '',
 
           players: [],
@@ -604,12 +572,6 @@
             blueTeam: ['', ''],
             updatedBy: '',
             updaterPassword: ''
-          },
-
-          currentGame: {
-            redCivs: [],
-            blueCivs: [],
-            winner: null
           }
         }
       },
@@ -632,6 +594,17 @@
         },
         activeMatchCivStats() {
           return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 };
+        },
+        // Danh sách những người có quyền xác thực cho kèo này (Gồm người phụ trách + các game thủ tham gia kèo)
+        allowedUpdaters() {
+          if (!this.selectedMatch) return [];
+          const list = new Set();
+          if (this.selectedMatch.updatedBy) list.add(this.selectedMatch.updatedBy);
+          (this.selectedMatch.redTeam || []).forEach(p => { if (p) list.add(p); });
+          (this.selectedMatch.blueTeam || []).forEach(p => { if (p) list.add(p); });
+          
+          // Thêm các game thủ có trong danh sách Players cấu hình
+          return Array.from(list);
         }
       },
       methods: {
@@ -709,10 +682,15 @@
           }
         },
 
-        async toggleWinner(game) {
-          game.winner = game.winner === 'RED' ? 'BLUE' : 'RED';
+        // Cập nhật Đội thắng trực tiếp cho từng trận
+        async setWinner(game, winnerTeam) {
+          if (!this.hasUpdatePermission && !this.isAdmin) {
+            this.openLoginUpdaterModal();
+            return;
+          }
+          game.winner = winnerTeam;
           await this.syncMatchToBackend(this.selectedMatch);
-          this.showNotify("Đã đổi kết quả đội thắng!");
+          this.showNotify(`Đã cập nhật: ${winnerTeam === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng'}`);
         },
 
         async toggleCivStats() {
@@ -767,15 +745,23 @@
         },
 
         openLoginUpdaterModal() {
+          this.updaterNameInput = '';
           this.updaterPassInput = '';
           this.showLoginUpdaterModal = true;
         },
 
+        // Kiểm tra User & Pass của Người chơi / Người phụ trách
         verifyUpdaterPassword() {
-          const targetPlayer = this.players.find(p => p.name === this.selectedMatch.updatedBy);
+          if (!this.updaterNameInput) {
+            this.showNotify("Vui lòng chọn tên của bạn!", "error");
+            return;
+          }
+
+          const targetPlayer = this.players.find(p => p.name === this.updaterNameInput);
+          
           if (this.isAdmin || (targetPlayer && targetPlayer.password === this.updaterPassInput)) {
             this.hasUpdatePermission = true;
-            this.currentUpdater = this.selectedMatch.updatedBy;
+            this.currentUpdater = this.updaterNameInput;
             this.showLoginUpdaterModal = false;
             this.showNotify(`Xác thực thành công! Quyền cập nhật mở cho ${this.currentUpdater}`);
           } else {
@@ -808,7 +794,7 @@
 
         async deleteGameFromMatch(gameIndex) {
           if (!this.hasUpdatePermission && !this.isAdmin) {
-            this.showNotify("Bạn không có quyền chỉnh sửa kèo này!", "error");
+            this.openLoginUpdaterModal();
             return;
           }
 
@@ -946,7 +932,6 @@
           this.currentUpdater = newMatch.updatedBy;
           this.showNewMatchModal = false;
           this.currentTab = 'detail';
-          this.resetCurrentGame();
           this.syncMatchToBackend(newMatch);
           this.showNotify("Đã khởi tạo kèo đấu thành công!");
         },
@@ -955,36 +940,18 @@
           this.selectedMatch = match;
           this.currentTab = 'detail';
           this.hasUpdatePermission = this.isAdmin;
-          this.resetCurrentGame();
-        },
-
-        resetCurrentGame() {
-          const count = this.selectedMatch ? this.selectedMatch.redTeam.length : 2;
-          this.currentGame = { redCivs: Array(count).fill(''), blueCivs: Array(count).fill(''), winner: null };
-        },
-
-        addGameToMatch() {
-          if (!this.selectedMatch) return;
-          if (!this.currentGame.winner) {
-            alert("Vui lòng cập nhật đội thắng!");
-            return;
-          }
-          if (this.currentGame.redCivs.some(c => !c) || this.currentGame.blueCivs.some(c => !c)) {
-            alert("Vui lòng chọn đầy đủ quân cho các game thủ!");
-            return;
-          }
-
-          this.selectedMatch.games.push(JSON.parse(JSON.stringify(this.currentGame)));
-          this.syncMatchToBackend(this.selectedMatch);
-          this.showNotify(`Đã thêm kết quả trận ${this.selectedMatch.games.length}!`);
-          this.resetCurrentGame();
         },
 
         async finishMatch() {
-          if (confirm("Xác nhận kết thúc kèo đấu chung cuộc?")) {
+          if (!this.hasUpdatePermission && !this.isAdmin) {
+            this.openLoginUpdaterModal();
+            return;
+          }
+
+          if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này? Tool sẽ tự động tạo kèo LIVE mới cho các lần soi quân tiếp theo.")) {
             this.selectedMatch.status = 'FINISHED';
             await this.syncMatchToBackend(this.selectedMatch);
-            this.showNotify("Đã kết thúc kèo đấu!");
+            this.showNotify("Đã kết thúc kèo đấu thành công!");
           }
         },
 
@@ -1041,7 +1008,7 @@
         
         this.fetchInitialData();
 
-        // Tự động đồng bộ với Google Apps Script mỗi 3 giây
+        // Tự động đồng bộ từ Google Sheets mỗi 3 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
