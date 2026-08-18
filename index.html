@@ -164,7 +164,7 @@
               <i class="fa-solid fa-unlock mr-1"></i> Quyền Cập Nhật Active ({{ currentUpdater }})
             </span>
             <button v-else-if="selectedMatch.status === 'LIVE'" @click="openLoginUpdaterModal" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded">
-              <i class="fa-solid fa-key mr-1"></i> Nhập Mật Khẩu Để Cập Nhật & Kết Thúc
+              <i class="fa-solid fa-key mr-1"></i> Nhập Pass Player Để Cập Nhật & Kết Thúc
             </button>
           </div>
         </div>
@@ -195,8 +195,8 @@
                 </div>
               </div>
 
-              <!-- Nút Kết Thúc Kèo (Cho Phép Admin hoặc Người Có Quyền Cập Nhật) -->
-              <button v-if="selectedMatch.status === 'LIVE' && (hasUpdatePermission || isAdmin)" 
+              <!-- Nút Kết Thúc Kèo -->
+              <button v-if="selectedMatch.status === 'LIVE'" 
                       @click="finishMatch" 
                       class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black px-4 py-3 rounded-xl shadow-lg border border-amber-400 flex items-center gap-2 text-xs">
                 <i class="fa-solid fa-flag-checkered text-base"></i>
@@ -232,7 +232,7 @@
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
                   
-                  <!-- CẬP NHẬT TỈ SỐ / ĐỘI THẮNG DỄ DÀNG CHỈ BẰNG 1 CÚ CLICK -->
+                  <!-- Bấm chọn trực tiếp Đội Thắng -->
                   <div class="flex items-center gap-1.5">
                     <button @click="setWinner(g, 'RED')" 
                             :class="g.winner === 'RED' ? 'bg-red-600 text-white font-bold ring-2 ring-red-400' : 'bg-slate-800 text-slate-400 hover:text-red-300'"
@@ -245,7 +245,7 @@
                       🔵 Team Xanh Thắng
                     </button>
                     <span v-if="g.winner === 'PENDING'" class="text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded text-[10px] animate-pulse">
-                      ⏳ Chờ chọn đội thắng
+                      ⏳ Chưa chọn đội thắng
                     </span>
                   </div>
                 </div>
@@ -264,7 +264,7 @@
                 </div>
               </div>
 
-              <!-- BẢNG QUÂN ĐỐI XỨNG PLAYER - QUÂN -->
+              <!-- BẢNG QUÂN ĐỐI XỨNG -->
               <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80 overflow-x-auto">
                 <div class="grid grid-cols-2 gap-4 pb-2 border-b border-slate-800 text-[11px] font-bold">
                   <div class="text-red-400 text-center border-r border-slate-800">TEAM ĐỎ</div>
@@ -394,23 +394,23 @@
         </div>
       </div>
 
-      <!-- MODAL 3: NHẬP TÊN PLAYER & PASS ĐỂ XÁC THỰC QỦYEN CẬP NHẬT / KẾT THÚC KÈO -->
+      <!-- MODAL 3: NHẬP PASS PLAYER ĐỂ XÁC THỰC -->
       <div v-if="showLoginUpdaterModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3">
-          <h3 class="text-sm font-bold text-amber-400 text-center"><i class="fa-solid fa-user-lock mr-1"></i> Xác Thực Quyền Cập Nhật Kèo</h3>
-          <p class="text-xs text-slate-400 text-center">Chọn tên của bạn (Người phụ trách/Game thủ tham gia kèo) và nhập mật khẩu cá nhân.</p>
+          <h3 class="text-sm font-bold text-amber-400 text-center"><i class="fa-solid fa-user-lock mr-1"></i> Xác Thực Mật Khẩu Player</h3>
+          <p class="text-xs text-slate-400 text-center">Chọn Tên Player trong danh sách Google Sheet và nhập Mật khẩu tương ứng.</p>
           
           <div class="space-y-2">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Chọn Tên Người Phụ Trách / Game Thủ:</label>
+              <label class="block text-[11px] text-slate-400 mb-1">Chọn Tên Player:</label>
               <select v-model="updaterNameInput" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
-                <option value="" disabled>-- Chọn Tên Player --</option>
+                <option value="" disabled>-- Chọn Player --</option>
                 <option v-for="p in allowedUpdaters" :value="p" :key="p">{{ p }}</option>
               </select>
             </div>
             
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Mật khẩu cá nhân:</label>
+              <label class="block text-[11px] text-slate-400 mb-1">Mật khẩu Player:</label>
               <input type="password" v-model="updaterPassInput" @keyup.enter="verifyUpdaterPassword" placeholder="Nhập mật khẩu..." class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
             </div>
           </div>
@@ -519,13 +519,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyaECDC91qWltOe69XJ3yjMYf9XD1DVEWdhlatqL0qc4XohLHHq1zGD_LG2fnhlBYVr/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwF060pdIHDJcTTYqiACPdd7RvUD8Lp5kWzYXPaRExGwZmDau3TBGC_HQDRaTD1-t9E0Q/exec";
 
     Vue.createApp({
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
-          appVersion: 'v2.2-SmartPermission',
+          appVersion: 'v2.3',
           buildTime: '',
 
           currentTab: 'matches',
@@ -595,15 +595,15 @@
         activeMatchCivStats() {
           return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 };
         },
-        // Danh sách những người có quyền xác thực cho kèo này (Gồm người phụ trách + các game thủ tham gia kèo)
+        // Lấy danh sách tất cả các PlayerName trong hệ thống để thực hiện xác thực
         allowedUpdaters() {
-          if (!this.selectedMatch) return [];
           const list = new Set();
-          if (this.selectedMatch.updatedBy) list.add(this.selectedMatch.updatedBy);
-          (this.selectedMatch.redTeam || []).forEach(p => { if (p) list.add(p); });
-          (this.selectedMatch.blueTeam || []).forEach(p => { if (p) list.add(p); });
-          
-          // Thêm các game thủ có trong danh sách Players cấu hình
+          this.players.forEach(p => { if (p.name) list.add(p.name); });
+          if (this.selectedMatch) {
+            if (this.selectedMatch.updatedBy) list.add(this.selectedMatch.updatedBy);
+            (this.selectedMatch.redTeam || []).forEach(p => { if (p) list.add(p); });
+            (this.selectedMatch.blueTeam || []).forEach(p => { if (p) list.add(p); });
+          }
           return Array.from(list);
         }
       },
@@ -682,7 +682,7 @@
           }
         },
 
-        // Cập nhật Đội thắng trực tiếp cho từng trận
+        // Cập nhật đội thắng trực tiếp cho từng trận
         async setWinner(game, winnerTeam) {
           if (!this.hasUpdatePermission && !this.isAdmin) {
             this.openLoginUpdaterModal();
@@ -750,22 +750,22 @@
           this.showLoginUpdaterModal = true;
         },
 
-        // Kiểm tra User & Pass của Người chơi / Người phụ trách
+        // Kiểm tra PlayerName & Mật Khẩu tương ứng trong Google Sheets
         verifyUpdaterPassword() {
           if (!this.updaterNameInput) {
-            this.showNotify("Vui lòng chọn tên của bạn!", "error");
+            this.showNotify("Vui lòng chọn Tên Player!", "error");
             return;
           }
 
           const targetPlayer = this.players.find(p => p.name === this.updaterNameInput);
           
-          if (this.isAdmin || (targetPlayer && targetPlayer.password === this.updaterPassInput)) {
+          if (this.isAdmin || (targetPlayer && String(targetPlayer.password) === String(this.updaterPassInput).trim())) {
             this.hasUpdatePermission = true;
             this.currentUpdater = this.updaterNameInput;
             this.showLoginUpdaterModal = false;
-            this.showNotify(`Xác thực thành công! Quyền cập nhật mở cho ${this.currentUpdater}`);
+            this.showNotify(`Xác thực thành công! Quyền cập nhật mở cho Player ${this.currentUpdater}`);
           } else {
-            this.showNotify("Mật khẩu cá nhân không đúng!", "error");
+            this.showNotify("Mật khẩu cá nhân của Player không chính xác!", "error");
           }
         },
 
@@ -904,7 +904,7 @@
 
           if (!this.isAdmin) {
             const target = this.players.find(p => p.name === this.newMatchForm.updatedBy);
-            if (target && target.password !== this.newMatchForm.updaterPassword) {
+            if (target && String(target.password) !== String(this.newMatchForm.updaterPassword).trim()) {
               this.showNotify("Mật khẩu của người phụ trách không chính xác!", "error");
               return;
             }
@@ -1008,7 +1008,6 @@
         
         this.fetchInitialData();
 
-        // Tự động đồng bộ từ Google Sheets mỗi 3 giây
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
