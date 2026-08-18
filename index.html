@@ -552,6 +552,7 @@
 
     Vue.createApp({
       data() {
+        const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
           currentTab: 'matches',
           filterStatus: 'ALL',
@@ -568,7 +569,7 @@
           newPlayerForm: { name: '', password: '' },
           cleanupDays: 1,
 
-          showCivStats: true,
+          showCivStats: savedCivStats !== null ? (savedCivStats === 'true') : true,
 
           hasUpdatePermission: false,
           currentUpdater: '',
@@ -661,13 +662,15 @@
         async fetchInitialData() {
           this.isLoading = true;
           try {
-            if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
+            if (API_URL && API_URL.trim() !== "") {
               const res = await fetch(API_URL + "?action=getInitialData");
               const data = await res.json();
               if (data.players && data.players.length) this.players = data.players;
               if (data.matches) this.matches = data.matches;
               if (data.showCivStats !== undefined) {
-                this.showCivStats = (data.showCivStats === true || data.showCivStats === "true");
+                const cloudCivStats = (data.showCivStats === true || data.showCivStats === "true");
+                this.showCivStats = cloudCivStats;
+                localStorage.setItem('aoe_showCivStats', cloudCivStats);
               }
               if (data.adminPassword) this.adminPasswordConfig = data.adminPassword;
             }
@@ -680,12 +683,19 @@
 
         async toggleCivStats() {
           this.showCivStats = !this.showCivStats;
+          localStorage.setItem('aoe_showCivStats', this.showCivStats);
           this.showNotify(this.showCivStats ? "Đã BẬT hiển thị thông số Cung - Chém" : "Đã TẮT hiển thị thông số Cung - Chém");
-          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
-            await fetch(API_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
-            });
+          
+          if (API_URL && API_URL.trim() !== "") {
+            try {
+              await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
+              });
+            } catch (err) {
+              console.error("Lỗi lưu cấu hình:", err);
+            }
           }
         },
 
@@ -695,9 +705,10 @@
             return;
           }
           this.showNotify("Đã đổi mật khẩu Admin thành công!");
-          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
+          if (API_URL && API_URL.trim() !== "") {
             await fetch(API_URL, {
               method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ action: 'saveAdminPassword', adminPassword: this.adminPasswordConfig.trim() })
             });
           }
@@ -751,9 +762,10 @@
               this.currentTab = 'matches';
             }
             this.showNotify("Đã xóa kèo đấu thành công!");
-            if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
+            if (API_URL && API_URL.trim() !== "") {
               await fetch(API_URL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
               });
             }
@@ -806,9 +818,10 @@
           this.matches = matchesToKeep;
           this.showNotify(`Đã dọn dẹp thành công ${deletedIds.length} kèo đấu cũ!`);
 
-          if (API_URL && !API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) {
+          if (API_URL && API_URL.trim() !== "") {
             await fetch(API_URL, {
               method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ action: 'deleteMatches', matchIds: deletedIds })
             });
           }
@@ -834,8 +847,12 @@
           }
         },
         async syncPlayersToBackend() {
-          if (!API_URL || API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) return;
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'savePlayers', players: this.players }) });
+          if (!API_URL || API_URL.trim() === "") return;
+          await fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'savePlayers', players: this.players }) 
+          });
         },
 
         openNewMatchModal() {
@@ -938,8 +955,12 @@
         },
 
         async syncMatchToBackend(match) {
-          if (!API_URL || API_URL.includes("DEPLOYED_GOOGLE_APPS_SCRIPT_URL_HERE")) return;
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveMatch', match: match }) });
+          if (!API_URL || API_URL.trim() === "") return;
+          await fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'saveMatch', match: match }) 
+          });
         },
 
         getCivType(civName) {
