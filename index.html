@@ -549,7 +549,7 @@
 
     <!-- FOOTER BUILD VERSION -->
     <footer class="mt-8 pt-4 border-t border-slate-800/80 text-center text-[11px] text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-      <div>AOE Match Tracker &bull; Powered by Vue 3 & Google Apps Script</div>
+      <div>AOE Match Tracker &bull; Powered by XO</div>
       <div class="flex items-center gap-2">
         <span class="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-amber-400 font-mono font-bold">{{ appVersion }}</span>
         <span>Build: <code class="text-slate-400">{{ buildTime }}</code></span>
@@ -566,8 +566,8 @@
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
           // APP BUILD INFO
-          appVersion: 'v1.1',
-          buildTime: '18/08/2026 - 10:08',
+          appVersion: 'v1.2',
+          buildTime: '',
 
           currentTab: 'matches',
           filterStatus: 'ALL',
@@ -1016,6 +1016,12 @@
         }
       },
       mounted() {
+
+        // Tự động lấy ngày giờ hiện tại dạng DD/MM/YYYY - HH:mm
+        const now = new Date();
+        const pad = n => n < 10 ? '0' + n : n;
+        this.buildTime = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        
         this.fetchInitialData();
 
         setInterval(() => {
