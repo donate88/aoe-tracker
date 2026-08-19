@@ -584,18 +584,32 @@
           }
         },
 
-        async finishMatch() {
-          if (!this.canEdit) {
-            this.openLoginUpdaterModal();
-            return;
-          }
-
-          if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
-            this.selectedMatch.status = 'FINISHED';
-            await this.syncMatchToBackend(this.selectedMatch);
-            this.showNotify("Đã kết thúc kèo đấu!");
-          }
-        },
+        async async finishMatch() {
+                if (!this.canEdit) {
+                  this.openLoginUpdaterModal();
+                  return;
+                }
+              
+                if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
+                  try {
+                    const res = await fetch(API_URL, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                      body: JSON.stringify({
+                        action: 'finishMatch',
+                        matchId: this.selectedMatch.id
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                      this.selectedMatch.status = 'FINISHED';
+                      this.showNotify("Đã kết thúc kèo đấu!");
+                    }
+                  } catch (e) {
+                    this.showNotify("Lỗi kết nối khi kết thúc kèo!", "error");
+                  }
+                }
+              },
 
         async fetchInitialData() {
           this.isLoading = true;
