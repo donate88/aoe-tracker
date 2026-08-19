@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <!-- Chart.js Thư viện vẽ biểu đồ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
@@ -41,6 +40,13 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap z-10">
+          <!-- NÚT QR DONATE -->
+          <button @click="showDonateModal = true" 
+                  class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
+            <span>🧋</span>
+            <span>Gửi Admin ly nước</span>
+          </button>
+
           <button @click="goHome" :class="currentTab === 'matches' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-xs transition">
             <i class="fa-solid fa-list-check mr-1"></i> Danh Sách Kèo
           </button>
@@ -216,7 +222,25 @@
         </div>
       </div>
 
-      <!-- MODALS -->
+      <!-- MODAL QR DONATE -->
+      <div v-if="showDonateModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+        <div class="bg-slate-900 border border-pink-500/40 rounded-xl max-w-sm w-full p-5 text-center space-y-3 shadow-2xl relative">
+          <button @click="showDonateModal = false" class="absolute top-3 right-3 text-slate-400 hover:text-white text-lg">&times;</button>
+          <h3 class="text-sm font-bold text-pink-400 flex items-center justify-center gap-1.5">🧋 Gửi Admin Ly Cà Phê</h3>
+          <p class="text-xs text-slate-300">Ủng hộ Admin duy trì Server & Nâng cấp Tool!</p>
+          <div class="bg-white p-2 rounded-lg inline-block my-1 shadow-inner">
+            <img src="https://img.vietqr.io/image/MB-0868549555-compact2.png?amount=20000&addInfo=AOE%20Tracker%20Donate" alt="QR Donate" class="w-48 h-48 mx-auto object-contain">
+          </div>
+          <div class="text-[11px] text-slate-400 space-y-0.5">
+            <div>Ngân hàng: <b class="text-slate-200">MB Bank</b></div>
+            <div>Số TK: <b class="text-amber-400 font-mono">0868549555</b></div>
+            <div>Chủ TK: <b class="text-slate-200">ADMIN XO</b></div>
+          </div>
+          <button @click="showDonateModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs text-slate-300 hover:bg-slate-700">Đóng</button>
+        </div>
+      </div>
+
+      <!-- MODAL LOGIN PLAYER WEB -->
       <div v-if="showLoginUpdaterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3">
           <h3 class="text-sm font-bold text-amber-400 text-center">Đăng Nhập Player</h3>
@@ -232,6 +256,7 @@
         </div>
       </div>
 
+      <!-- MODAL ADMIN LOGIN -->
       <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[100]">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3 text-center">
           <h3 class="text-sm font-bold text-amber-400">Đăng Nhập Admin</h3>
@@ -242,6 +267,56 @@
           </div>
         </div>
       </div>
+
+      <!-- MODAL QUẢN LÝ PLAYER & CẤU HÌNH ADMIN -->
+      <div v-if="showPlayerManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-sliders mr-1"></i> Bảng Quản Trị Hệ Thống</h3>
+            <button @click="showPlayerManagerModal = false" class="text-slate-400 hover:text-white">&times;</button>
+          </div>
+
+          <!-- BẬT TẮT CUNG CHÉM -->
+          <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 flex justify-between items-center">
+            <div>
+              <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-chart-pie mr-1"></i> Hiển Thị Thông Số Cung - Chém</span>
+              <span class="text-[10px] text-slate-400">Ẩn/hiện chỉ số tỉ lệ Cung-Chém trên toàn giao diện</span>
+            </div>
+            <button @click="toggleCivStats" 
+                    :class="showCivStats ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-800 text-slate-400'" 
+                    class="px-3 py-1 rounded-full text-xs border border-slate-700 transition">
+              {{ showCivStats ? 'ON (Đang Hiện)' : 'OFF (Đang Ẩn)' }}
+            </button>
+          </div>
+
+          <!-- THÊM USER PLAYER MỚI -->
+          <div class="space-y-2">
+            <span class="text-xs font-bold text-emerald-400 block"><i class="fa-solid fa-user-plus mr-1"></i> Thêm Player & Pass:</span>
+            <div class="grid grid-cols-5 gap-2">
+              <input type="text" v-model="newPlayerForm.name" placeholder="Tên Player..." class="col-span-3 bg-slate-800 border border-slate-700 p-1.5 rounded text-xs">
+              <input type="text" v-model="newPlayerForm.password" placeholder="Pass..." class="col-span-1 bg-slate-800 border border-slate-700 p-1.5 rounded text-xs">
+              <button @click="addPlayer" class="col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold">Thêm</button>
+            </div>
+          </div>
+
+          <!-- DANH SÁCH PLAYERS -->
+          <div class="flex-1 overflow-y-auto space-y-1.5 border-t border-b border-slate-800 py-2 pr-1">
+            <div v-for="(p, idx) in players" :key="idx" class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 text-xs">
+              <div>
+                <span class="font-bold text-slate-200">{{ p.name }}</span>
+                <span class="text-[10px] text-amber-400 ml-2">(Pass: {{ p.password || '123' }})</span>
+              </div>
+              <div class="flex gap-1">
+                <button @click="editPlayerPass(idx)" class="bg-slate-800 text-amber-400 px-2 py-0.5 rounded text-[10px]">Đổi Pass</button>
+                <button @click="deletePlayer(idx)" class="bg-red-950 text-red-400 px-2 py-0.5 rounded text-[10px]">Xóa</button>
+              </div>
+            </div>
+          </div>
+
+          <button @click="showPlayerManagerModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs font-bold">Đóng</button>
+        </div>
+      </div>
+
     </div>
 
     <footer class="mt-8 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
@@ -259,11 +334,13 @@
           filterStatus: 'ALL',
           isLoading: false,
           notification: null,
+          showDonateModal: false,
           isAdmin: false,
           showAdminModal: false,
           adminPasswordInput: '',
           adminPasswordConfig: '00716441516',
           showPlayerManagerModal: false,
+          newPlayerForm: { name: '', password: '' },
           showCivStats: true,
           sessionPlayerName: sessionStorage.getItem('aoe_playerName') || '',
           sessionPlayerPass: sessionStorage.getItem('aoe_playerPass') || '',
@@ -332,7 +409,43 @@
             const data = await res.json();
             if (data.players) this.players = data.players;
             if (data.matches) this.matches = data.matches;
+            if (data.showCivStats !== undefined) this.showCivStats = data.showCivStats;
           } catch(e) {} finally { this.isLoading = false; }
+        },
+        toggleCivStats() {
+          this.showCivStats = !this.showCivStats;
+          fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
+          });
+        },
+        async addPlayer() {
+          if (!this.newPlayerForm.name) return;
+          this.players.push({ name: this.newPlayerForm.name.trim(), password: (this.newPlayerForm.password || '123').trim() });
+          this.newPlayerForm = { name: '', password: '' };
+          await this.savePlayersToBackend();
+        },
+        async editPlayerPass(idx) {
+          const newPass = prompt("Nhập mật khẩu mới cho " + this.players[idx].name + ":", this.players[idx].password);
+          if (newPass !== null) {
+            this.players[idx].password = newPass.trim();
+            await this.savePlayersToBackend();
+          }
+        },
+        async deletePlayer(idx) {
+          if (confirm("Xóa player: " + this.players[idx].name + "?")) {
+            this.players.splice(idx, 1);
+            await this.savePlayersToBackend();
+          }
+        },
+        async savePlayersToBackend() {
+          await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'savePlayers', players: this.players })
+          });
+          this.showNotify("Đã cập nhật danh sách Player!");
         },
         selectMatch(match) { this.selectedMatch = match; this.currentTab = 'detail'; },
         getCivType(civName) { const f = this.civs.find(c => c.name === civName); return f ? f.type : ''; },
@@ -405,7 +518,7 @@
         this.fetchInitialData();
         setInterval(() => {
           if (this.currentTab === 'matches') this.fetchInitialData();
-        }, 8000); // 8 giây cập nhật 1 lần giúp tối ưu tốc độ
+        }, 8000);
       }
     }).mount('#app');
   </script>
