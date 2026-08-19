@@ -43,7 +43,7 @@
           <button @click="showDonateModal = true" 
                   class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
             <span>🧋</span>
-            <span>Gửi Admin ly nước</span>
+            <span>Gửi Mời Admin ly nước</span>
           </button>
 
           <button @click="goHome" :class="currentTab === 'matches' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-xs transition">
@@ -220,21 +220,37 @@
         </div>
       </div>
 
-      <!-- MODAL QR DONATE -->
+      <!-- MODAL QR DONATE (MẪU CŨ CHUẨN GIAO DIỆN) -->
       <div v-if="showDonateModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
-        <div class="bg-slate-900 border border-pink-500/40 rounded-xl max-w-sm w-full p-5 text-center space-y-3 shadow-2xl relative">
-          <button @click="showDonateModal = false" class="absolute top-3 right-3 text-slate-400 hover:text-white text-lg">&times;</button>
-          <h3 class="text-sm font-bold text-pink-400 flex items-center justify-center gap-1.5">🧋 Gửi Admin Ly Cà Phê</h3>
-          <p class="text-xs text-slate-300">Ủng hộ Admin duy trì Server & Nâng cấp Tool!</p>
-          <div class="bg-white p-2 rounded-lg inline-block my-1 shadow-inner">
-            <img src="https://img.vietqr.io/image/MB-0868549555-compact2.png?amount=20000&addInfo=AOE%20Tracker%20Donate" alt="QR Donate" class="w-48 h-48 mx-auto object-contain">
+        <div class="bg-[#0b0e17] border border-pink-500/30 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
+          <!-- Nút Đóng -->
+          <button @click="showDonateModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg transition">&times;</button>
+          <!-- Tiêu đề Modal -->
+          <h3 class="text-base font-bold text-pink-400 flex items-center justify-center gap-2">
+            <span>🧋</span> Gửi Admin Ly Nước Mát
+          </h3>
+          <!-- Lời nhắn cảm ơn -->
+          <p class="text-xs text-slate-300 leading-relaxed px-2">
+            Cảm ơn bạn đã sử dụng hệ thống! Mọi sự ủng hộ ly trà đá/mì tôm là động lực lớn để Admin duy trì & nâng cấp web! ❤️
+          </p>
+          <!-- Khung QR VietQR (Sử dụng API VietQR VPBank chuẩn) -->
+          <div class="bg-white p-3 rounded-2xl inline-block shadow-lg my-1">
+            <img src="https://img.vietqr.io/image/VPB-0868549555-compact2.png?accountName=NGUYEN%20TUAN%20ANH&addInfo=AOE%20Tracker%20Donate" 
+                 alt="VietQR Donate VPBank" 
+                 class="w-56 h-56 mx-auto object-contain">
           </div>
-          <div class="text-[11px] text-slate-400 space-y-0.5">
-            <div>Ngân hàng: <b class="text-slate-200">MB Bank</b></div>
-            <div>Số TK: <b class="text-amber-400 font-mono">0868549555</b></div>
-            <div>Chủ TK: <b class="text-slate-200">ADMIN XO</b></div>
+          <!-- Thẻ Thông Tin Ngân Hàng VPBank -->
+          <div class="bg-[#121827] border border-slate-800/80 p-3.5 rounded-xl space-y-1 text-xs">
+            <div class="text-amber-400 font-bold">VPBank (Ngân Hàng TMCP Việt Nam Thịnh Vượng)</div>
+            <div class="text-slate-300">STK: <b class="text-white font-mono text-sm tracking-wider">0868549555</b></div>
+            <div class="text-slate-300">Chủ tài khoản: <b class="text-white uppercase">NGUYỄN TUẤN ANH</b></div>
           </div>
-          <button @click="showDonateModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs text-slate-300 hover:bg-slate-700">Đóng</button>
+          <!-- Nút Cảm Ơn Nổi Bật -->
+          <button @click="showDonateModal = false" 
+                  class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-xl text-xs shadow-lg transition duration-200">
+            Cảm ơn bạn nhiều lắm! ✨
+          </button>
+          
         </div>
       </div>
 
