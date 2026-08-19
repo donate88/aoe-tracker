@@ -35,7 +35,7 @@
 
       <!-- HEADER -->
       <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-amber-500/30 p-4 rounded-xl shadow-lg mb-6 gap-4">
-        <div class="flex items-center gap-3 cursor-pointer" @click="currentTab = 'matches'">
+        <div class="flex items-center gap-3 cursor-pointer" @click="goHome">
           <div class="bg-amber-500 text-slate-950 p-2.5 rounded-lg font-black text-xl">AOE</div>
           <div>
             <h1 class="text-xl font-bold text-amber-400 tracking-wide">AOE MATCH TRACKER</h1>
@@ -50,7 +50,7 @@
             <span>Gửi Admin ly nước</span>
           </button>
 
-          <button @click="currentTab = 'matches'" 
+          <button @click="goHome" 
                   :class="currentTab === 'matches' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
                   class="px-3.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
             <i class="fa-solid fa-list-check"></i> Danh Sách Kèo
@@ -103,6 +103,11 @@
                 </span>
                 <span v-if="match.status === 'LIVE'" class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">🔴 TRỰC TIẾP</span>
                 <span v-else class="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded">🏁 KẾT THÚC</span>
+                
+                <!-- Badge Streamer/Máy phát -->
+                <span v-if="match.streamerName" class="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded font-mono">
+                  📺 {{ match.streamerName }}
+                </span>
               </div>
               
               <div class="flex items-center gap-2">
@@ -149,11 +154,18 @@
       <!-- TAB 2: CHI TIẾT KÈO ĐẤU -->
       <div v-if="currentTab === 'detail' && selectedMatch" class="space-y-4">
         <div class="flex justify-between items-center">
-          <button @click="currentTab = 'matches'" class="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1">
+          <button @click="goHome" class="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1">
             <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
           </button>
 
           <div class="flex items-center gap-2 text-xs">
+            <!-- NÚT COPY LINK ĐƯỜNG DẪN KÈO ĐẤU -->
+            <button @click="copyMatchLink(selectedMatch.id)" 
+                    class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>Sao Chép Link Kèo</span>
+            </button>
+
             <button v-if="isAdmin" 
                     @click="deleteSingleMatch(selectedMatch.id)" 
                     class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded flex items-center gap-1">
@@ -177,6 +189,9 @@
                 <span class="text-base font-bold text-amber-400">Kèo {{ selectedMatch.mode }}</span>
                 <span v-if="selectedMatch.status === 'LIVE'" class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">🔴 TRỰC TIẾP</span>
                 <span v-else class="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded">🏁 KẾT THÚC</span>
+                <span v-if="selectedMatch.streamerName" class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded font-mono">
+                  📺 {{ selectedMatch.streamerName }}
+                </span>
               </div>
               <p class="text-xs text-slate-400 mt-1">
                 <i class="fa-regular fa-clock mr-1"></i> {{ selectedMatch.formattedTime }} | 
@@ -519,13 +534,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwF060pdIHDJcTTYqiACPdd7RvUD8Lp5kWzYXPaRExGwZmDau3TBGC_HQDRaTD1-t9E0Q/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwv-k2_TTBRc8gmlRT8dU52O6pnMdOunSjAuw9Us1J-v3DXF_vvqGgIEy_qK-AGu0T7UQ/exec";
 
     Vue.createApp({
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
         return {
-          appVersion: 'v2.3',
+          appVersion: 'v2.3-DirectLink',
           buildTime: '',
 
           currentTab: 'matches',
@@ -595,7 +610,6 @@
         activeMatchCivStats() {
           return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 };
         },
-        // Lấy danh sách tất cả các PlayerName trong hệ thống để thực hiện xác thực
         allowedUpdaters() {
           const list = new Set();
           this.players.forEach(p => { if (p.name) list.add(p.name); });
@@ -608,6 +622,32 @@
         }
       },
       methods: {
+        goHome() {
+          this.currentTab = 'matches';
+          this.selectedMatch = null;
+          window.history.pushState({}, '', window.location.pathname);
+        },
+
+        copyMatchLink(matchId) {
+          const url = `${window.location.origin}${window.location.pathname}?matchId=${matchId}`;
+          navigator.clipboard.writeText(url).then(() => {
+            this.showNotify("Đã sao chép đường dẫn kèo đấu vào bộ nhớ tạm!");
+          }).catch(() => {
+            this.showNotify("Lỗi sao chép liên kết!", "error");
+          });
+        },
+
+        checkUrlForMatch() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const matchId = urlParams.get('matchId');
+          if (matchId && this.matches.length > 0) {
+            const targetMatch = this.matches.find(m => m.id === matchId);
+            if (targetMatch) {
+              this.selectMatch(targetMatch, false);
+            }
+          }
+        },
+
         getGameRowLoop(match, game) {
           const maxLen = Math.max(
             match.redTeam ? match.redTeam.length : 0,
@@ -663,6 +703,9 @@
               if (data.players && data.players.length) this.players = data.players;
               if (data.matches) {
                 this.matches = data.matches;
+                
+                this.checkUrlForMatch();
+
                 if (this.selectedMatch) {
                   const updated = this.matches.find(m => m.id === this.selectedMatch.id);
                   if (updated) this.selectedMatch = updated;
@@ -682,7 +725,6 @@
           }
         },
 
-        // Cập nhật đội thắng trực tiếp cho từng trận
         async setWinner(game, winnerTeam) {
           if (!this.hasUpdatePermission && !this.isAdmin) {
             this.openLoginUpdaterModal();
@@ -750,7 +792,6 @@
           this.showLoginUpdaterModal = true;
         },
 
-        // Kiểm tra PlayerName & Mật Khẩu tương ứng trong Google Sheets
         verifyUpdaterPassword() {
           if (!this.updaterNameInput) {
             this.showNotify("Vui lòng chọn Tên Player!", "error");
@@ -778,8 +819,7 @@
           if (confirm("Bạn có chắc chắn muốn xóa vĩnh viễn kèo đấu này?")) {
             this.matches = this.matches.filter(m => m.id !== matchId);
             if (this.selectedMatch && this.selectedMatch.id === matchId) {
-              this.selectedMatch = null;
-              this.currentTab = 'matches';
+              this.goHome();
             }
             this.showNotify("Đã xóa kèo đấu thành công!");
             if (API_URL && API_URL.trim() !== "") {
@@ -927,19 +967,23 @@
           };
 
           this.matches.unshift(newMatch);
-          this.selectedMatch = newMatch;
+          this.selectMatch(newMatch);
           this.hasUpdatePermission = true;
           this.currentUpdater = newMatch.updatedBy;
           this.showNewMatchModal = false;
-          this.currentTab = 'detail';
           this.syncMatchToBackend(newMatch);
           this.showNotify("Đã khởi tạo kèo đấu thành công!");
         },
 
-        selectMatch(match) {
+        selectMatch(match, updateUrl = true) {
           this.selectedMatch = match;
           this.currentTab = 'detail';
           this.hasUpdatePermission = this.isAdmin;
+
+          if (updateUrl && match) {
+            const newUrl = `${window.location.pathname}?matchId=${match.id}`;
+            window.history.pushState({ matchId: match.id }, '', newUrl);
+          }
         },
 
         async finishMatch() {
@@ -1007,6 +1051,15 @@
         this.buildTime = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} - ${pad(now.getHours())}:${pad(now.getMinutes())}`;
         
         this.fetchInitialData();
+
+        window.addEventListener('popstate', (e) => {
+          if (e.state && e.state.matchId) {
+            const match = this.matches.find(m => m.id === e.state.matchId);
+            if (match) this.selectMatch(match, false);
+          } else {
+            this.currentTab = 'matches';
+          }
+        });
 
         setInterval(() => {
           if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
