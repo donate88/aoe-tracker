@@ -56,9 +56,14 @@
             <i class="fa-solid fa-list-check"></i> Danh Sách Kèo
           </button>
 
-          <button @click="openNewMatchModal" 
-                  class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
-            <i class="fa-solid fa-plus-circle"></i> Tạo Kèo Mới
+          <!-- Hiển thị Trạng thái Đăng Nhập Player -->
+          <div v-if="sessionPlayerName" class="flex items-center gap-2 bg-slate-800 border border-amber-500/50 px-3 py-1 rounded-lg">
+            <span class="text-xs text-amber-400 font-bold"><i class="fa-solid fa-user-check"></i> {{ sessionPlayerName }}</span>
+            <button @click="logoutPlayer" class="text-xs text-red-400 hover:text-red-300 ml-1" title="Đăng xuất Player"><i class="fa-solid fa-right-from-bracket"></i></button>
+          </div>
+
+          <button v-else @click="openLoginUpdaterModal" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-key"></i> Đăng Nhập Player
           </button>
 
           <!-- Admin Status & Login -->
@@ -66,11 +71,11 @@
                   @click="openAdminModal" 
                   type="button"
                   class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-lock"></i> Đăng Nhập Admin
+            <i class="fa-solid fa-lock"></i> Admin
           </button>
 
           <div v-else class="flex items-center gap-2 bg-slate-800 border border-emerald-500/50 px-3 py-1 rounded-lg">
-            <span class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-user-shield"></i> Admin Active</span>
+            <span class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-user-shield"></i> Admin</span>
             <button @click="showPlayerManagerModal = true" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded">Quản Lý</button>
             <button @click="logoutAdmin" class="text-xs text-red-400 hover:text-red-300 ml-1" title="Đăng xuất Admin"><i class="fa-solid fa-right-from-bracket"></i></button>
           </div>
@@ -104,9 +109,8 @@
                 <span v-if="match.status === 'LIVE'" class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">🔴 TRỰC TIẾP</span>
                 <span v-else class="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded">🏁 KẾT THÚC</span>
                 
-                <!-- Badge Streamer/Máy phát -->
                 <span v-if="match.streamerName" class="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded font-mono">
-                  📺 {{ match.streamerName }}
+                  🎮 {{ match.streamerName }}
                 </span>
               </div>
               
@@ -159,7 +163,6 @@
           </button>
 
           <div class="flex items-center gap-2 text-xs">
-            <!-- NÚT COPY LINK ĐƯỜNG DẪN KÈO ĐẤU -->
             <button @click="copyMatchLink(selectedMatch.id)" 
                     class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg text-xs transition flex items-center gap-1.5 shadow">
               <i class="fa-solid fa-share-nodes"></i>
@@ -170,13 +173,6 @@
                     @click="deleteSingleMatch(selectedMatch.id)" 
                     class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded flex items-center gap-1">
               <i class="fa-solid fa-trash-can"></i> Xóa Kèo Này
-            </button>
-
-            <span v-if="hasUpdatePermission" class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2.5 py-1 rounded">
-              <i class="fa-solid fa-unlock mr-1"></i> Quyền Cập Nhật Active ({{ currentUpdater }})
-            </span>
-            <button v-else-if="selectedMatch.status === 'LIVE'" @click="openLoginUpdaterModal" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded">
-              <i class="fa-solid fa-key mr-1"></i> Nhập Pass Player Để Cập Nhật & Kết Thúc
             </button>
           </div>
         </div>
@@ -190,12 +186,12 @@
                 <span v-if="selectedMatch.status === 'LIVE'" class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">🔴 TRỰC TIẾP</span>
                 <span v-else class="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded">🏁 KẾT THÚC</span>
                 <span v-if="selectedMatch.streamerName" class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-0.5 rounded font-mono">
-                  📺 {{ selectedMatch.streamerName }}
+                  🎮 {{ selectedMatch.streamerName }}
                 </span>
               </div>
               <p class="text-xs text-slate-400 mt-1">
                 <i class="fa-regular fa-clock mr-1"></i> {{ selectedMatch.formattedTime }} | 
-                <i class="fa-solid fa-user-pen ml-1 mr-1"></i> Người phụ trách: <span class="text-amber-300 font-bold">{{ selectedMatch.updatedBy }}</span>
+                <i class="fa-solid fa-user-pen ml-1 mr-1"></i> Người tạo: <span class="text-amber-300 font-bold">{{ selectedMatch.updatedBy }}</span>
               </p>
             </div>
 
@@ -247,14 +243,13 @@
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-amber-500/20">Trận {{ idx + 1 }}</span>
                   
-                  <!-- Bấm chọn trực tiếp Đội Thắng -->
                   <div class="flex items-center gap-1.5">
-                    <button @click="setWinner(g, 'RED')" 
+                    <button @click="setWinner(idx, 'RED')" 
                             :class="g.winner === 'RED' ? 'bg-red-600 text-white font-bold ring-2 ring-red-400' : 'bg-slate-800 text-slate-400 hover:text-red-300'"
                             class="px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1">
                       🔴 Team Đỏ Thắng
                     </button>
-                    <button @click="setWinner(g, 'BLUE')" 
+                    <button @click="setWinner(idx, 'BLUE')" 
                             :class="g.winner === 'BLUE' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-400' : 'bg-slate-800 text-slate-400 hover:text-blue-300'"
                             class="px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1">
                       🔵 Team Xanh Thắng
@@ -270,7 +265,7 @@
                     Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
                   </span>
 
-                  <button v-if="hasUpdatePermission || isAdmin" 
+                  <button v-if="canEdit" 
                           @click="deleteGameFromMatch(idx)" 
                           title="Xóa trận nhập sai này" 
                           class="text-[10px] bg-red-950 hover:bg-red-800 text-red-300 border border-red-700/50 px-2 py-0.5 rounded transition">
@@ -314,113 +309,18 @@
 
       </div>
 
-      <!-- MODAL 1: TẠO KÈO ĐẤU MỚI -->
-      <div v-if="showNewMatchModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-            <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-plus-circle mr-1"></i>Tạo Kèo Đấu Mới</h3>
-            <button @click="showNewMatchModal = false" class="text-slate-400 hover:text-white">&times;</button>
-          </div>
-
-          <div class="space-y-3 text-xs">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-slate-400 mb-1">Thể thức:</label>
-                <select v-model="newMatchForm.mode" @change="onModeChange" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
-                  <option value="1v1">1 vs 1 (Cần 2 Players)</option>
-                  <option value="2v2">2 vs 2 (Cần 4 Players)</option>
-                  <option value="3v3">3 vs 3 (Cần 6 Players)</option>
-                  <option value="4v4">4 vs 4 (Cần 8 Players)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-slate-400 mb-1">Người phụ trách Update:</label>
-                <select v-model="newMatchForm.updatedBy" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
-                  <option value="" disabled>-- Chọn Player --</option>
-                  <option v-for="p in players" :value="p.name" :key="p.name">{{ p.name }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div v-if="!isAdmin && newMatchForm.updatedBy">
-              <label class="block text-amber-400 mb-1">Mật khẩu người phụ trách ({{ newMatchForm.updatedBy }}):</label>
-              <input type="password" v-model="newMatchForm.updaterPassword" placeholder="Nhập mật khẩu do Admin cấp..." class="bg-slate-800 border border-amber-500/50 p-2 rounded text-xs w-full">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 pt-1">
-              <div class="space-y-2 bg-red-950/20 p-2.5 rounded-lg border border-red-900/30">
-                <span class="font-bold text-red-400 block">Team Đỏ ({{ getSelectedCount('red') }}/{{ playerInputsCount }}):</span>
-                <div v-for="(p, i) in playerInputsCount" :key="'nr-'+i">
-                  <select v-model="newMatchForm.redTeam[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
-                    <option value="" disabled>-- Chọn Player {{ i + 1 }} --</option>
-                    <option v-for="player in getAvailablePlayers('red', i)" :value="player.name" :key="player.name">{{ player.name }}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="space-y-2 bg-blue-950/20 p-2.5 rounded-lg border border-blue-900/30">
-                <span class="font-bold text-blue-400 block">Team Xanh ({{ getSelectedCount('blue') }}/{{ playerInputsCount }}):</span>
-                <div v-for="(p, i) in playerInputsCount" :key="'nb-'+i">
-                  <select v-model="newMatchForm.blueTeam[i]" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs w-full">
-                    <option value="" disabled>-- Chọn Player {{ i + 1 }} --</option>
-                    <option v-for="player in getAvailablePlayers('blue', i)" :value="player.name" :key="player.name">{{ player.name }}</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 border-t border-slate-800 pt-3">
-            <button @click="showNewMatchModal = false" class="px-3 py-1.5 bg-slate-800 rounded text-xs font-bold">Hủy</button>
-            <button @click="createMatch" class="px-4 py-1.5 bg-amber-500 text-slate-950 rounded text-xs font-bold">Khởi Tạo Kèo</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODAL 2: DONATE QR CODE -->
-      <div v-if="showDonateModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-pink-500/40 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center relative overflow-hidden">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-            <h3 class="text-sm font-bold text-pink-400 flex items-center gap-1.5">
-              <span>🧋</span> Gửi Admin Ly Nước Mát
-            </h3>
-            <button @click="showDonateModal = false" class="text-slate-400 hover:text-white">&times;</button>
-          </div>
-
-          <p class="text-xs text-slate-300">
-            Cảm ơn bạn đã sử dụng hệ thống! Mọi sự ủng hộ ly trà đá là động lực lớn để Admin duy trì & nâng cấp web! ❤️
-          </p>
-
-          <div class="bg-white p-3 rounded-xl inline-block shadow-inner border border-pink-200">
-            <img src="https://img.vietqr.io/image/VPB-0868549555-compact2.png?amount=0&addInfo=Moi%20Admin%20Coc%20Nuoc&accountName=NGUYEN%20TUAN%20ANH" 
-                 alt="Mã QR Chuyển Khoản VPBank" 
-                 class="w-56 h-56 object-contain mx-auto rounded-lg">
-          </div>
-
-          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs space-y-1">
-            <div class="text-amber-400 font-bold">VPBank (Ngân Hàng TMCP Việt Nam Thịnh Vượng)</div>
-            <div class="text-slate-200 font-mono font-bold tracking-wider">STK: 0868549555</div>
-            <div class="text-slate-400">Chủ tài khoản: <span class="text-white font-bold">NGUYỄN TUẤN ANH</span></div>
-          </div>
-
-          <button @click="showDonateModal = false" class="w-full py-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-lg text-xs transition">
-            Cảm ơn bạn nhiều lắm! ✨
-          </button>
-        </div>
-      </div>
-
-      <!-- MODAL 3: NHẬP PASS PLAYER ĐỂ XÁC THỰC -->
+      <!-- MODAL LOGIN PLAYER WEB -->
       <div v-if="showLoginUpdaterModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3">
-          <h3 class="text-sm font-bold text-amber-400 text-center"><i class="fa-solid fa-user-lock mr-1"></i> Xác Thực Mật Khẩu Player</h3>
-          <p class="text-xs text-slate-400 text-center">Chọn Tên Player trong danh sách Google Sheet và nhập Mật khẩu tương ứng.</p>
+          <h3 class="text-sm font-bold text-amber-400 text-center"><i class="fa-solid fa-user-lock mr-1"></i> Đăng Nhập Tài Khoản Player</h3>
+          <p class="text-xs text-slate-400 text-center">Chọn Tên Player và nhập Mật khẩu đã khai báo trên Google Sheet.</p>
           
           <div class="space-y-2">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Chọn Tên Player:</label>
+              <label class="block text-[11px] text-slate-400 mb-1">Tên Player ID:</label>
               <select v-model="updaterNameInput" class="bg-slate-800 border border-slate-700 p-2 rounded text-xs w-full">
                 <option value="" disabled>-- Chọn Player --</option>
-                <option v-for="p in allowedUpdaters" :value="p" :key="p">{{ p }}</option>
+                <option v-for="p in players" :value="p.name" :key="p.name">{{ p.name }}</option>
               </select>
             </div>
             
@@ -432,12 +332,12 @@
 
           <div class="flex gap-2 pt-1">
             <button @click="showLoginUpdaterModal = false" class="w-full py-1.5 bg-slate-800 rounded text-xs">Hủy</button>
-            <button @click="verifyUpdaterPassword" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold rounded text-xs">Xác Nhận</button>
+            <button @click="verifyUpdaterPassword" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold rounded text-xs">Xác Nhận Đăng Nhập</button>
           </div>
         </div>
       </div>
 
-      <!-- MODAL 4: ADMIN LOGIN -->
+      <!-- MODAL ADMIN LOGIN -->
       <div v-if="showAdminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
         <div class="bg-slate-900 border border-amber-500/30 rounded-xl max-w-sm w-full p-5 space-y-3 text-center shadow-2xl">
           <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-user-shield mr-1"></i> Đăng Nhập Admin</h3>
@@ -449,7 +349,7 @@
         </div>
       </div>
 
-      <!-- MODAL 5: QUẢN LÝ PLAYER & CẤU HÌNH ADMIN -->
+      <!-- MODAL QUẢN LÝ PLAYER & CẤU HÌNH ADMIN -->
       <div v-if="showPlayerManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -469,36 +369,10 @@
             </button>
           </div>
 
-          <div class="bg-slate-950 p-3 rounded-lg border border-amber-500/30 space-y-2">
-            <span class="text-xs font-bold text-amber-400 block"><i class="fa-solid fa-key mr-1"></i> Mật Khẩu Đăng Nhập Admin:</span>
-            <div class="flex items-center gap-2">
-              <input type="text" v-model="adminPasswordConfig" placeholder="Mật khẩu Admin mới..." class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs flex-1">
-              <button @click="saveAdminPassword" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded text-xs transition">
-                Đổi Mật Khẩu
-              </button>
-            </div>
-          </div>
-
-          <div class="bg-slate-950 p-3 rounded-lg border border-red-900/40 space-y-2">
-            <span class="text-xs font-bold text-red-400 block"><i class="fa-solid fa-broom mr-1"></i> Dọn Dẹp / Xóa Kèo Đã Kết Thúc:</span>
-            <div class="flex items-center gap-2">
-              <select v-model="cleanupDays" class="bg-slate-800 border border-slate-700 p-1.5 rounded text-xs flex-1">
-                <option :value="1">Trước 1 ngày</option>
-                <option :value="2">Trước 2 ngày</option>
-                <option :value="3">Trước 3 ngày</option>
-                <option :value="7">Trước 1 tuần (7 ngày)</option>
-                <option :value="0">Xóa tất cả kèo đã kết thúc</option>
-              </select>
-              <button @click="cleanupOldMatches" class="bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded text-xs transition">
-                Xóa Ngay
-              </button>
-            </div>
-          </div>
-
           <div class="space-y-2">
-            <span class="text-xs font-bold text-emerald-400 block"><i class="fa-solid fa-user-plus mr-1"></i> Quản Lý Player & Pass:</span>
+            <span class="text-xs font-bold text-emerald-400 block"><i class="fa-solid fa-user-plus mr-1"></i> Danh Sách Player & Pass:</span>
             <div class="grid grid-cols-5 gap-2">
-              <input type="text" v-model="newPlayerForm.name" placeholder="Tên Game Thủ..." class="col-span-3 bg-slate-800 border border-slate-700 p-1.5 rounded text-xs">
+              <input type="text" v-model="newPlayerForm.name" placeholder="Tên Player..." class="col-span-3 bg-slate-800 border border-slate-700 p-1.5 rounded text-xs">
               <input type="text" v-model="newPlayerForm.password" placeholder="Pass..." class="col-span-1 bg-slate-800 border border-slate-700 p-1.5 rounded text-xs">
               <button @click="addPlayer" class="col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold">Thêm</button>
             </div>
@@ -508,7 +382,7 @@
             <div v-for="(p, idx) in players" :key="idx" class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 text-xs">
               <div>
                 <span class="font-bold text-slate-200">{{ p.name }}</span>
-                <span class="text-[10px] text-amber-400 ml-2">(Pass: {{ p.password || 'Chưa đặt' }})</span>
+                <span class="text-[10px] text-amber-400 ml-2">(Pass: {{ p.password || '123' }})</span>
               </div>
               <div class="flex gap-1">
                 <button @click="editPlayerPass(idx)" class="bg-slate-800 text-amber-400 px-2 py-0.5 rounded text-[10px]">Đổi Pass</button>
@@ -534,13 +408,16 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwv-k2_TTBRc8gmlRT8dU52O6pnMdOunSjAuw9Us1J-v3DXF_vvqGgIEy_qK-AGu0T7UQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxgvE5TlTQ8MJTanKpmR_ztirtFS7LWnNpUlBbvvfQcktzddL7oHziNIP0gCqe6jqVytg/exec";
 
     Vue.createApp({
       data() {
         const savedCivStats = localStorage.getItem('aoe_showCivStats');
+        const sessionName = sessionStorage.getItem('aoe_playerName') || '';
+        const sessionPass = sessionStorage.getItem('aoe_playerPass') || '';
+
         return {
-          appVersion: 'v2.3-DirectLink',
+          appVersion: 'v3.0-SessionAuth',
           buildTime: '',
 
           currentTab: 'matches',
@@ -556,12 +433,11 @@
           adminPasswordConfig: '00716441516',
           showPlayerManagerModal: false,
           newPlayerForm: { name: '', password: '' },
-          cleanupDays: 1,
 
           showCivStats: savedCivStats !== null ? (savedCivStats === 'true') : true,
 
-          hasUpdatePermission: false,
-          currentUpdater: '',
+          sessionPlayerName: sessionName,
+          sessionPlayerPass: sessionPass,
           showLoginUpdaterModal: false,
           updaterNameInput: '',
           updaterPassInput: '',
@@ -578,24 +454,12 @@
           ],
 
           matches: [],
-          selectedMatch: null,
-
-          showNewMatchModal: false,
-          newMatchForm: {
-            mode: '2v2',
-            redTeam: ['', ''],
-            blueTeam: ['', ''],
-            updatedBy: '',
-            updaterPassword: ''
-          }
+          selectedMatch: null
         }
       },
       computed: {
-        playerInputsCount() {
-          if (this.newMatchForm.mode === '1v1') return 1;
-          if (this.newMatchForm.mode === '2v2') return 2;
-          if (this.newMatchForm.mode === '3v3') return 3;
-          return 4;
+        canEdit() {
+          return this.isAdmin || (this.sessionPlayerName && this.sessionPlayerPass);
         },
         filteredMatches() {
           if (this.filterStatus === 'ALL') return this.matches;
@@ -609,16 +473,6 @@
         },
         activeMatchCivStats() {
           return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 };
-        },
-        allowedUpdaters() {
-          const list = new Set();
-          this.players.forEach(p => { if (p.name) list.add(p.name); });
-          if (this.selectedMatch) {
-            if (this.selectedMatch.updatedBy) list.add(this.selectedMatch.updatedBy);
-            (this.selectedMatch.redTeam || []).forEach(p => { if (p) list.add(p); });
-            (this.selectedMatch.blueTeam || []).forEach(p => { if (p) list.add(p); });
-          }
-          return Array.from(list);
         }
       },
       methods: {
@@ -631,7 +485,7 @@
         copyMatchLink(matchId) {
           const url = `${window.location.origin}${window.location.pathname}?matchId=${matchId}`;
           navigator.clipboard.writeText(url).then(() => {
-            this.showNotify("Đã sao chép đường dẫn kèo đấu vào bộ nhớ tạm!");
+            this.showNotify("Đã sao chép liên kết kèo đấu!");
           }).catch(() => {
             this.showNotify("Lỗi sao chép liên kết!", "error");
           });
@@ -648,50 +502,99 @@
           }
         },
 
-        getGameRowLoop(match, game) {
-          const maxLen = Math.max(
-            match.redTeam ? match.redTeam.length : 0,
-            match.blueTeam ? match.blueTeam.length : 0,
-            game.redCivs ? game.redCivs.length : 0,
-            game.blueCivs ? game.blueCivs.length : 0
-          );
-          return Array.from({ length: maxLen > 0 ? maxLen : 1 });
+        openLoginUpdaterModal() {
+          this.updaterNameInput = this.sessionPlayerName || '';
+          this.updaterPassInput = '';
+          this.showLoginUpdaterModal = true;
         },
 
-        openAdminModal() {
-          this.adminPasswordInput = '';
-          this.showAdminModal = true;
-        },
-        showNotify(msg, type = 'success') {
-          this.notification = { message: msg, type: type };
-          setTimeout(() => { this.notification = null; }, 4000);
-        },
+        async verifyUpdaterPassword() {
+          if (!this.updaterNameInput || !this.updaterPassInput) {
+            this.showNotify("Vui lòng nhập Tên và Mật khẩu!", "error");
+            return;
+          }
 
-        getSelectedCount(teamSide) {
-          const list = teamSide === 'red' ? this.newMatchForm.redTeam : this.newMatchForm.blueTeam;
-          return list.filter(p => p !== '' && p !== null).length;
-        },
+          try {
+            const res = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'verifyPlayerLogin',
+                playerName: this.updaterNameInput,
+                password: this.updaterPassInput
+              })
+            });
+            const data = await res.json();
 
-        getAvailablePlayers(teamSide, currentIdx) {
-          const selectedRed = this.newMatchForm.redTeam;
-          const selectedBlue = this.newMatchForm.blueTeam;
-          
-          const activePlayersInOtherLiveMatches = new Set();
-          this.matches.forEach(m => {
-            if (m.status === 'LIVE') {
-              [...(m.redTeam || []), ...(m.blueTeam || [])].forEach(p => {
-                if (p) activePlayersInOtherLiveMatches.add(p);
-              });
+            if (data.status === 'success') {
+              this.sessionPlayerName = this.updaterNameInput;
+              this.sessionPlayerPass = this.updaterPassInput;
+              sessionStorage.setItem('aoe_playerName', this.sessionPlayerName);
+              sessionStorage.setItem('aoe_playerPass', this.sessionPlayerPass);
+              this.showLoginUpdaterModal = false;
+              this.showNotify(`Đã đăng nhập tài khoản Player: ${this.sessionPlayerName}`);
+            } else {
+              this.showNotify("Mật khẩu cá nhân không đúng!", "error");
             }
-          });
-          
-          return this.players.filter(p => {
-            const name = p.name;
-            if (activePlayersInOtherLiveMatches.has(name)) return false;
-            if (selectedRed.includes(name) && !(teamSide === 'red' && selectedRed[currentIdx] === name)) return false;
-            if (selectedBlue.includes(name) && !(teamSide === 'blue' && selectedBlue[currentIdx] === name)) return false;
-            return true;
-          });
+          } catch (e) {
+            this.showNotify("Lỗi xác thực mạng!", "error");
+          }
+        },
+
+        logoutPlayer() {
+          this.sessionPlayerName = '';
+          this.sessionPlayerPass = '';
+          sessionStorage.removeItem('aoe_playerName');
+          sessionStorage.removeItem('aoe_playerPass');
+          this.showNotify("Đã đăng xuất Player.");
+        },
+
+        // Cập nhật Đội thắng trực tiếp
+        async setWinner(gameIndex, winnerTeam) {
+          if (!this.canEdit) {
+            this.openLoginUpdaterModal();
+            return;
+          }
+
+          this.selectedMatch.games[gameIndex].winner = winnerTeam;
+
+          try {
+            const res = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'setWinner',
+                matchId: this.selectedMatch.id,
+                gameIndex: gameIndex,
+                winner: winnerTeam,
+                isAdmin: this.isAdmin,
+                updatedBy: this.sessionPlayerName,
+                password: this.sessionPlayerPass
+              })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+              this.showNotify(`Đã cập nhật: ${winnerTeam === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng'}`);
+            } else {
+              this.showNotify(data.message || "Không có quyền cập nhật!", "error");
+              this.openLoginUpdaterModal();
+            }
+          } catch (e) {
+            this.showNotify("Lỗi kết nối khi lưu tỉ số!", "error");
+          }
+        },
+
+        async finishMatch() {
+          if (!this.canEdit) {
+            this.openLoginUpdaterModal();
+            return;
+          }
+
+          if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
+            this.selectedMatch.status = 'FINISHED';
+            await this.syncMatchToBackend(this.selectedMatch);
+            this.showNotify("Đã kết thúc kèo đấu!");
+          }
         },
 
         async fetchInitialData() {
@@ -703,7 +606,6 @@
               if (data.players && data.players.length) this.players = data.players;
               if (data.matches) {
                 this.matches = data.matches;
-                
                 this.checkUrlForMatch();
 
                 if (this.selectedMatch) {
@@ -711,12 +613,6 @@
                   if (updated) this.selectedMatch = updated;
                 }
               }
-              if (data.showCivStats !== undefined) {
-                const cloudCivStats = (data.showCivStats === true || data.showCivStats === "true");
-                this.showCivStats = cloudCivStats;
-                localStorage.setItem('aoe_showCivStats', cloudCivStats);
-              }
-              if (data.adminPassword) this.adminPasswordConfig = data.adminPassword;
             }
           } catch (e) {
             console.error("Lỗi API:", e);
@@ -725,277 +621,13 @@
           }
         },
 
-        async setWinner(game, winnerTeam) {
-          if (!this.hasUpdatePermission && !this.isAdmin) {
-            this.openLoginUpdaterModal();
-            return;
-          }
-          game.winner = winnerTeam;
-          await this.syncMatchToBackend(this.selectedMatch);
-          this.showNotify(`Đã cập nhật: ${winnerTeam === 'RED' ? '🔴 Team Đỏ Thắng' : '🔵 Team Xanh Thắng'}`);
-        },
-
-        async toggleCivStats() {
-          this.showCivStats = !this.showCivStats;
-          localStorage.setItem('aoe_showCivStats', this.showCivStats);
-          this.showNotify(this.showCivStats ? "Đã BẬT hiển thị thông số Cung - Chém" : "Đã TẮT hiển thị thông số Cung - Chém");
-          
-          if (API_URL && API_URL.trim() !== "") {
-            try {
-              await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
-              });
-            } catch (err) {
-              console.error("Lỗi lưu cấu hình:", err);
-            }
-          }
-        },
-
-        async saveAdminPassword() {
-          if (!this.adminPasswordConfig.trim()) {
-            this.showNotify("Mật khẩu Admin không được để rỗng!", "error");
-            return;
-          }
-          this.showNotify("Đã đổi mật khẩu Admin thành công!");
-          if (API_URL && API_URL.trim() !== "") {
-            await fetch(API_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: 'saveAdminPassword', adminPassword: this.adminPasswordConfig.trim() })
-            });
-          }
-        },
-
-        loginAdmin() {
-          if (this.adminPasswordInput.trim() === this.adminPasswordConfig.trim()) {
-            this.isAdmin = true;
-            this.hasUpdatePermission = true;
-            this.currentUpdater = 'Admin';
-            this.showAdminModal = false;
-            this.adminPasswordInput = '';
-            this.showNotify("Đã đăng nhập Admin thành công!");
-          } else {
-            this.showNotify("Mật khẩu Admin không đúng!", "error");
-          }
-        },
-        logoutAdmin() {
-          this.isAdmin = false;
-          this.hasUpdatePermission = false;
-          this.showNotify("Đã đăng xuất Admin.");
-        },
-
-        openLoginUpdaterModal() {
-          this.updaterNameInput = '';
-          this.updaterPassInput = '';
-          this.showLoginUpdaterModal = true;
-        },
-
-        verifyUpdaterPassword() {
-          if (!this.updaterNameInput) {
-            this.showNotify("Vui lòng chọn Tên Player!", "error");
-            return;
-          }
-
-          const targetPlayer = this.players.find(p => p.name === this.updaterNameInput);
-          
-          if (this.isAdmin || (targetPlayer && String(targetPlayer.password) === String(this.updaterPassInput).trim())) {
-            this.hasUpdatePermission = true;
-            this.currentUpdater = this.updaterNameInput;
-            this.showLoginUpdaterModal = false;
-            this.showNotify(`Xác thực thành công! Quyền cập nhật mở cho Player ${this.currentUpdater}`);
-          } else {
-            this.showNotify("Mật khẩu cá nhân của Player không chính xác!", "error");
-          }
-        },
-
-        async deleteSingleMatch(matchId) {
-          if (!this.isAdmin) {
-            this.showNotify("Chỉ Admin mới có quyền xóa kèo đấu!", "error");
-            return;
-          }
-
-          if (confirm("Bạn có chắc chắn muốn xóa vĩnh viễn kèo đấu này?")) {
-            this.matches = this.matches.filter(m => m.id !== matchId);
-            if (this.selectedMatch && this.selectedMatch.id === matchId) {
-              this.goHome();
-            }
-            this.showNotify("Đã xóa kèo đấu thành công!");
-            if (API_URL && API_URL.trim() !== "") {
-              await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
-              });
-            }
-          }
-        },
-
-        async deleteGameFromMatch(gameIndex) {
-          if (!this.hasUpdatePermission && !this.isAdmin) {
-            this.openLoginUpdaterModal();
-            return;
-          }
-
-          if (confirm(`Bạn có chắc chắn muốn xóa kết quả Trận ${gameIndex + 1}?`)) {
-            this.selectedMatch.games.splice(gameIndex, 1);
-            await this.syncMatchToBackend(this.selectedMatch);
-            this.showNotify(`Đã xóa Trận ${gameIndex + 1} thành công!`);
-          }
-        },
-
-        async cleanupOldMatches() {
-          const days = this.cleanupDays;
-          const confirmText = days === 0 ? "xóa TẤT CẢ kèo đấu đã kết thúc" : `xóa các kèo đã kết thúc trước đó ${days} ngày`;
-          if (!confirm(`Bạn có chắc chắn muốn ${confirmText}?`)) return;
-
-          const now = new Date();
-          const cutoffTime = days === 0 ? Infinity : now.getTime() - (days * 24 * 60 * 60 * 1000);
-
-          const matchesToKeep = [];
-          const deletedIds = [];
-
-          this.matches.forEach(m => {
-            let shouldDelete = false;
-            if (m.status === 'FINISHED') {
-              if (days === 0) {
-                shouldDelete = true;
-              } else if (m.createdAt) {
-                if (m.createdAt < cutoffTime) shouldDelete = true;
-              } else {
-                shouldDelete = true;
-              }
-            }
-
-            if (shouldDelete) {
-              deletedIds.push(m.id);
-            } else {
-              matchesToKeep.push(m);
-            }
-          });
-
-          this.matches = matchesToKeep;
-          this.showNotify(`Đã dọn dẹp thành công ${deletedIds.length} kèo đấu cũ!`);
-
-          if (API_URL && API_URL.trim() !== "") {
-            await fetch(API_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: 'deleteMatches', matchIds: deletedIds })
-            });
-          }
-        },
-
-        addPlayer() {
-          if (!this.newPlayerForm.name.trim()) return;
-          this.players.push({ name: this.newPlayerForm.name.trim(), password: this.newPlayerForm.password || '123' });
-          this.newPlayerForm = { name: '', password: '' };
-          this.syncPlayersToBackend();
-        },
-        editPlayerPass(idx) {
-          const newPass = prompt(`Nhập mật khẩu mới cho ${this.players[idx].name}:`, this.players[idx].password);
-          if (newPass !== null) {
-            this.players[idx].password = newPass.trim();
-            this.syncPlayersToBackend();
-          }
-        },
-        deletePlayer(idx) {
-          if (confirm(`Xóa game thủ ${this.players[idx].name}?`)) {
-            this.players.splice(idx, 1);
-            this.syncPlayersToBackend();
-          }
-        },
-        async syncPlayersToBackend() {
-          if (!API_URL || API_URL.trim() === "") return;
-          await fetch(API_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'savePlayers', players: this.players }) 
-          });
-        },
-
-        openNewMatchModal() {
-          this.newMatchForm = { mode: '2v2', redTeam: ['', ''], blueTeam: ['', ''], updatedBy: '', updaterPassword: '' };
-          this.showNewMatchModal = true;
-        },
-        onModeChange() {
-          const count = this.playerInputsCount;
-          this.newMatchForm.redTeam = Array(count).fill('');
-          this.newMatchForm.blueTeam = Array(count).fill('');
-        },
-
-        createMatch() {
-          if (!this.newMatchForm.updatedBy) {
-            this.showNotify("Vui lòng chọn người phụ trách update!", "error");
-            return;
-          }
-
-          const requiredCount = this.playerInputsCount;
-          const selectedRedCount = this.getSelectedCount('red');
-          const selectedBlueCount = this.getSelectedCount('blue');
-
-          if (selectedRedCount < requiredCount || selectedBlueCount < requiredCount) {
-            const missingRed = requiredCount - selectedRedCount;
-            const missingBlue = requiredCount - selectedBlueCount;
-            this.showNotify(`Vui lòng chọn đủ player! Thể thức ${this.newMatchForm.mode} còn thiếu: Đỏ (${missingRed}), Xanh (${missingBlue}).`, "error");
-            return;
-          }
-
-          if (!this.isAdmin) {
-            const target = this.players.find(p => p.name === this.newMatchForm.updatedBy);
-            if (target && String(target.password) !== String(this.newMatchForm.updaterPassword).trim()) {
-              this.showNotify("Mật khẩu của người phụ trách không chính xác!", "error");
-              return;
-            }
-          }
-
-          const now = new Date();
-          const pad = n => n < 10 ? '0' + n : n;
-          const formattedTime = `${pad(now.getHours())}:${pad(now.getMinutes())} - ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-
-          const newMatch = {
-            id: 'MATCH_' + Date.now(),
-            createdAt: Date.now(),
-            mode: this.newMatchForm.mode,
-            redTeam: [...this.newMatchForm.redTeam],
-            blueTeam: [...this.newMatchForm.blueTeam],
-            updatedBy: this.newMatchForm.updatedBy,
-            formattedTime: formattedTime,
-            status: 'LIVE',
-            games: []
-          };
-
-          this.matches.unshift(newMatch);
-          this.selectMatch(newMatch);
-          this.hasUpdatePermission = true;
-          this.currentUpdater = newMatch.updatedBy;
-          this.showNewMatchModal = false;
-          this.syncMatchToBackend(newMatch);
-          this.showNotify("Đã khởi tạo kèo đấu thành công!");
-        },
-
         selectMatch(match, updateUrl = true) {
           this.selectedMatch = match;
           this.currentTab = 'detail';
-          this.hasUpdatePermission = this.isAdmin;
 
           if (updateUrl && match) {
             const newUrl = `${window.location.pathname}?matchId=${match.id}`;
             window.history.pushState({ matchId: match.id }, '', newUrl);
-          }
-        },
-
-        async finishMatch() {
-          if (!this.hasUpdatePermission && !this.isAdmin) {
-            this.openLoginUpdaterModal();
-            return;
-          }
-
-          if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này? Tool sẽ tự động tạo kèo LIVE mới cho các lần soi quân tiếp theo.")) {
-            this.selectedMatch.status = 'FINISHED';
-            await this.syncMatchToBackend(this.selectedMatch);
-            this.showNotify("Đã kết thúc kèo đấu thành công!");
           }
         },
 
@@ -1006,6 +638,21 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'saveMatch', match: match }) 
           });
+        },
+
+        loginAdmin() {
+          if (this.adminPasswordInput.trim() === this.adminPasswordConfig.trim()) {
+            this.isAdmin = true;
+            this.showAdminModal = false;
+            this.adminPasswordInput = '';
+            this.showNotify("Đã đăng nhập Admin!");
+          } else {
+            this.showNotify("Mật khẩu Admin không đúng!", "error");
+          }
+        },
+        logoutAdmin() {
+          this.isAdmin = false;
+          this.showNotify("Đã đăng xuất Admin.");
         },
 
         getCivType(civName) {
@@ -1043,6 +690,19 @@
             chem += st.chem;
           });
           return { cung, chem };
+        },
+        getGameRowLoop(match, game) {
+          const maxLen = Math.max(
+            match.redTeam ? match.redTeam.length : 0,
+            match.blueTeam ? match.blueTeam.length : 0,
+            game.redCivs ? game.redCivs.length : 0,
+            game.blueCivs ? game.blueCivs.length : 0
+          );
+          return Array.from({ length: maxLen > 0 ? maxLen : 1 });
+        },
+        showNotify(msg, type = 'success') {
+          this.notification = { message: msg, type: type };
+          setTimeout(() => { this.notification = null; }, 4000);
         }
       },
       mounted() {
@@ -1062,7 +722,7 @@
         });
 
         setInterval(() => {
-          if (!this.showNewMatchModal && !this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
+          if (!this.showAdminModal && !this.showPlayerManagerModal && !this.showLoginUpdaterModal) {
             this.fetchInitialData();
           }
         }, 3000);
