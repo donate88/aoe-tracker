@@ -408,7 +408,7 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbz6HQp_8diXW57F5lylqYcbgD6G57iY4z0_tab8Uvv2kPnudgTZp_tMuJkE6kj7kNQmWQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzlHbKlyqHwi_8UtrTbZSBaeED-0PUGlJMVreqAZbJ6SDJltK_AEWM2hg2e6QSsAkGDeQ/exec";
 
     Vue.createApp({
       data() {
@@ -482,6 +482,11 @@
           window.history.pushState({}, '', window.location.pathname);
         },
 
+        openAdminModal() {
+          this.adminPasswordInput = '';
+          this.showAdminModal = true;
+        },
+
         copyMatchLink(matchId) {
           const url = `${window.location.origin}${window.location.pathname}?matchId=${matchId}`;
           navigator.clipboard.writeText(url).then(() => {
@@ -549,7 +554,6 @@
           this.showNotify("Đã đăng xuất Player.");
         },
 
-        // Cập nhật Đội thắng trực tiếp
         async setWinner(gameIndex, winnerTeam) {
           if (!this.canEdit) {
             this.openLoginUpdaterModal();
@@ -584,32 +588,110 @@
           }
         },
 
-        async async finishMatch() {
-                if (!this.canEdit) {
-                  this.openLoginUpdaterModal();
-                  return;
-                }
-              
-                if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
-                  try {
-                    const res = await fetch(API_URL, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                      body: JSON.stringify({
-                        action: 'finishMatch',
-                        matchId: this.selectedMatch.id
-                      })
-                    });
-                    const data = await res.json();
-                    if (data.status === 'success') {
-                      this.selectedMatch.status = 'FINISHED';
-                      this.showNotify("Đã kết thúc kèo đấu!");
-                    }
-                  } catch (e) {
-                    this.showNotify("Lỗi kết nối khi kết thúc kèo!", "error");
-                  }
-                }
-              },
+        async finishMatch() {
+          if (!this.canEdit) {
+            this.openLoginUpdaterModal();
+            return;
+          }
+
+          if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
+            try {
+              const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                  action: 'finishMatch',
+                  matchId: this.selectedMatch.id,
+                  isAdmin: this.isAdmin,
+                  playerName: this.sessionPlayerName,
+                  password: this.sessionPlayerPass
+                })
+              });
+              const data = await res.json();
+              if (data.status === 'success') {
+                this.selectedMatch.status = 'FINISHED';
+                this.showNotify("Đã kết thúc kèo đấu!");
+              } else {
+                this.showNotify(data.message || "Lỗi khi kết thúc kèo!", "error");
+              }
+            } catch (e) {
+              this.showNotify("Lỗi kết nối khi kết thúc kèo!", "error");
+            }
+          }
+        },
+
+        async deleteGameFromMatch(gameIndex) {
+          if (!this.canEdit) return;
+          if (confirm(`Bạn có chắc muốn xóa Trận ${gameIndex + 1}?`)) {
+            this.selectedMatch.games.splice(gameIndex, 1);
+            await this.syncMatchToBackend(this.selectedMatch);
+            this.showNotify(`Đã xóa Trận ${gameIndex + 1}`);
+          }
+        },
+
+        async deleteSingleMatch(matchId) {
+          if (!this.isAdmin) return;
+          if (confirm("Xác nhận XÓA VĨNH VIỄN kèo đấu này?")) {
+            try {
+              await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
+              });
+              this.matches = this.matches.filter(m => m.id !== matchId);
+              if (this.selectedMatch && this.selectedMatch.id === matchId) {
+                this.goHome();
+              }
+              this.showNotify("Đã xóa kèo đấu thành công!");
+            } catch (e) {
+              this.showNotify("Lỗi khi xóa kèo!", "error");
+            }
+          }
+        },
+
+        toggleCivStats() {
+          this.showCivStats = !this.showCivStats;
+          localStorage.setItem('aoe_showCivStats', this.showCivStats);
+          fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
+          });
+        },
+
+        async addPlayer() {
+          if (!this.newPlayerForm.name) return;
+          this.players.push({
+            name: this.newPlayerForm.name.trim(),
+            password: (this.newPlayerForm.password || '123').trim()
+          });
+          this.newPlayerForm = { name: '', password: '' };
+          await this.savePlayersToBackend();
+        },
+
+        async editPlayerPass(idx) {
+          const newPass = prompt("Nhập mật khẩu mới cho " + this.players[idx].name + ":", this.players[idx].password);
+          if (newPass !== null) {
+            this.players[idx].password = newPass.trim();
+            await this.savePlayersToBackend();
+          }
+        },
+
+        async deletePlayer(idx) {
+          if (confirm("Xóa player: " + this.players[idx].name + "?")) {
+            this.players.splice(idx, 1);
+            await this.savePlayersToBackend();
+          }
+        },
+
+        async savePlayersToBackend() {
+          await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'savePlayers', players: this.players })
+          });
+          this.showNotify("Đã cập nhật danh sách Player!");
+        },
 
         async fetchInitialData() {
           this.isLoading = true;
@@ -664,6 +746,7 @@
             this.showNotify("Mật khẩu Admin không đúng!", "error");
           }
         },
+
         logoutAdmin() {
           this.isAdmin = false;
           this.showNotify("Đã đăng xuất Admin.");
@@ -673,12 +756,14 @@
           const found = this.civs.find(c => c.name === civName);
           return found ? found.type : '';
         },
+
         getCivTypeClass(civName) {
           const type = this.getCivType(civName);
           if (type === 'cung') return 'bg-cyan-950 text-cyan-300 border border-cyan-800/50';
           if (type === 'chém') return 'bg-yellow-950 text-yellow-300 border border-yellow-800/50';
           return 'bg-slate-800 text-slate-400';
         },
+
         getGameCivStats(game) {
           let cung = 0, chem = 0;
           [...(game.redCivs || []), ...(game.blueCivs || [])].forEach(c => {
@@ -688,6 +773,7 @@
           });
           return { cung, chem };
         },
+
         getMatchScore(match) {
           let red = 0, blue = 0;
           (match.games || []).forEach(g => {
@@ -696,6 +782,7 @@
           });
           return { red, blue };
         },
+
         getMatchCivStats(match) {
           let cung = 0, chem = 0;
           (match.games || []).forEach(g => {
@@ -705,6 +792,7 @@
           });
           return { cung, chem };
         },
+
         getGameRowLoop(match, game) {
           const maxLen = Math.max(
             match.redTeam ? match.redTeam.length : 0,
@@ -714,6 +802,7 @@
           );
           return Array.from({ length: maxLen > 0 ? maxLen : 1 });
         },
+
         showNotify(msg, type = 'success') {
           this.notification = { message: msg, type: type };
           setTimeout(() => { this.notification = null; }, 4000);
