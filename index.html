@@ -43,7 +43,7 @@
           <button @click="showDonateModal = true" 
                   class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg animate-cute border border-pink-300/40 flex items-center gap-1.5 transition">
             <span>🧋</span>
-            <span>Gửi Mời Admin ly nước</span>
+            <span>Gửi Admin ly nước</span>
           </button>
 
           <button @click="goHome" :class="currentTab === 'matches' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-xs transition">
@@ -152,6 +152,9 @@
               <div class="bg-slate-950 px-5 py-2 rounded-xl border border-slate-800 text-center">
                 <div class="text-[10px] text-slate-400">TỈ SỐ CHUNG CUỘC</div>
                 <div class="text-2xl font-black"><span class="text-red-400">{{ activeMatchScore.red }}</span> - <span class="text-blue-400">{{ activeMatchScore.blue }}</span></div>
+                <div v-if="showCivStats" class="text-[11px] text-slate-400 mt-1">
+                  Tổng Cung - Chém: <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }}</span> - <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }}</span>
+                </div>
               </div>
               <button v-if="selectedMatch.status === 'LIVE'" @click="finishMatch" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl shadow border border-amber-400 text-xs">🏁 KẾT THÚC KÈO</button>
             </div>
@@ -174,7 +177,13 @@
                   <button @click="setWinner(idx, 'BLUE')" :class="g.winner === 'BLUE' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-400' : 'bg-slate-800 text-slate-400 hover:text-blue-300'" class="px-2.5 py-1 rounded text-[11px] transition">🔵 Team Xanh Thắng</button>
                   <span v-if="g.winner === 'PENDING'" class="text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded text-[10px] animate-pulse">⏳ Chưa chọn đội thắng</span>
                 </div>
-                <button v-if="canEdit" @click="deleteGameFromMatch(idx)" class="text-[10px] bg-red-950 text-red-300 border border-red-700/50 px-2 py-0.5 rounded">Xóa</button>
+                
+                <div class="flex items-center gap-3">
+                  <span v-if="showCivStats" class="text-[11px] text-slate-400">
+                    Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
+                  </span>
+                  <button v-if="canEdit" @click="deleteGameFromMatch(idx)" class="text-[10px] bg-red-950 text-red-300 border border-red-700/50 px-2 py-0.5 rounded">Xóa</button>
+                </div>
               </div>
 
               <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 overflow-x-auto">
@@ -203,13 +212,13 @@
       <!-- TAB 3: DASHBOARD THỐNG KÊ (ANALYTICS) -->
       <div v-if="currentTab === 'analytics'" class="space-y-6">
         <div class="bg-slate-900 p-4 rounded-xl border border-amber-500/30">
-          <h2 class="text-base font-bold text-amber-400 mb-1"><i class="fa-solid fa-chart-line mr-2"></i>Thống Kê Meta Game & Tỷ Lệ Hiện Quân (Civ Insight)</h2>
+          <h2 class="text-base font-bold text-amber-400 mb-1"><i class="fa-solid fa-chart-line mr-2"></i>Thống Kê Meta Game & Tỷ Lệ Chọn Quân (Civ Insight)</h2>
           <p class="text-xs text-slate-400">Phân tích dữ liệu trực tiếp từ tất cả lịch sử kèo đấu đã lưu.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow">
-            <h3 class="text-xs font-bold text-slate-300 mb-3 text-center">📊 Quân Xuất Hiện Nhiều Nhất</h3>
+            <h3 class="text-xs font-bold text-slate-300 mb-3 text-center">📊 Top Civilization (Quân Được Chọn Nhiều Nhất)</h3>
             <canvas id="civChart" class="max-h-64"></canvas>
           </div>
 
@@ -220,37 +229,29 @@
         </div>
       </div>
 
-      <!-- MODAL QR DONATE (MẪU CŨ CHUẨN GIAO DIỆN) -->
+      <!-- MODAL QR DONATE -->
       <div v-if="showDonateModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
         <div class="bg-[#0b0e17] border border-pink-500/30 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
-          <!-- Nút Đóng -->
           <button @click="showDonateModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg transition">&times;</button>
-          <!-- Tiêu đề Modal -->
           <h3 class="text-base font-bold text-pink-400 flex items-center justify-center gap-2">
             <span>🧋</span> Gửi Admin Ly Nước Mát
           </h3>
-          <!-- Lời nhắn cảm ơn -->
           <p class="text-xs text-slate-300 leading-relaxed px-2">
             Cảm ơn bạn đã sử dụng hệ thống! Mọi sự ủng hộ ly trà đá/mì tôm là động lực lớn để Admin duy trì & nâng cấp web! ❤️
           </p>
-          <!-- Khung QR VietQR (Sử dụng API VietQR VPBank chuẩn) -->
           <div class="bg-white p-3 rounded-2xl inline-block shadow-lg my-1">
             <img src="https://img.vietqr.io/image/VPB-0868549555-compact2.png?accountName=NGUYEN%20TUAN%20ANH&addInfo=AOE%20Tracker%20Donate" 
                  alt="VietQR Donate VPBank" 
                  class="w-56 h-56 mx-auto object-contain">
           </div>
-          <!-- Thẻ Thông Tin Ngân Hàng VPBank -->
           <div class="bg-[#121827] border border-slate-800/80 p-3.5 rounded-xl space-y-1 text-xs">
             <div class="text-amber-400 font-bold">VPBank (Ngân Hàng TMCP Việt Nam Thịnh Vượng)</div>
             <div class="text-slate-300">STK: <b class="text-white font-mono text-sm tracking-wider">0868549555</b></div>
             <div class="text-slate-300">Chủ tài khoản: <b class="text-white uppercase">NGUYỄN TUẤN ANH</b></div>
           </div>
-          <!-- Nút Cảm Ơn Nổi Bật -->
-          <button @click="showDonateModal = false" 
-                  class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-xl text-xs shadow-lg transition duration-200">
+          <button @click="showDonateModal = false" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-xl text-xs shadow-lg transition duration-200">
             Cảm ơn bạn nhiều lắm! ✨
           </button>
-          
         </div>
       </div>
 
@@ -340,6 +341,7 @@
 
     Vue.createApp({
       data() {
+        const localCivStats = localStorage.getItem('aoe_showCivStats');
         return {
           currentTab: 'matches',
           filterStatus: 'ALL',
@@ -352,7 +354,7 @@
           adminPasswordConfig: '00716441516',
           showPlayerManagerModal: false,
           newPlayerForm: { name: '', password: '' },
-          showCivStats: true,
+          showCivStats: localCivStats !== null ? (localCivStats === 'true') : true,
           sessionPlayerName: sessionStorage.getItem('aoe_playerName') || '',
           sessionPlayerPass: sessionStorage.getItem('aoe_playerPass') || '',
           showLoginUpdaterModal: false,
@@ -377,7 +379,8 @@
         canEdit() { return this.isAdmin || (this.sessionPlayerName && this.sessionPlayerPass); },
         filteredMatches() { return this.filterStatus === 'ALL' ? this.matches : this.matches.filter(m => m.status === this.filterStatus); },
         liveMatchesCount() { return this.matches.filter(m => m.status === 'LIVE').length; },
-        activeMatchScore() { return this.selectedMatch ? this.getMatchScore(this.selectedMatch) : { red: 0, blue: 0 }; }
+        activeMatchScore() { return this.selectedMatch ? this.getMatchScore(this.selectedMatch) : { red: 0, blue: 0 }; },
+        activeMatchCivStats() { return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 }; }
       },
       methods: {
         goHome() { this.currentTab = 'matches'; this.selectedMatch = null; },
@@ -418,10 +421,8 @@
             this.openLoginUpdaterModal();
             return;
           }
-
           this.selectedMatch.games[gameIndex].winner = winnerTeam;
           this.selectedMatch = { ...this.selectedMatch };
-
           try {
             const res = await fetch(API_URL, {
               method: 'POST',
@@ -500,7 +501,6 @@
             const data = await res.json();
             if (data.players) this.players = data.players;
             if (data.matches) this.matches = data.matches;
-            if (data.showCivStats !== undefined) this.showCivStats = data.showCivStats;
             if (this.selectedMatch) {
               const updated = this.matches.find(m => m.id === this.selectedMatch.id);
               if (updated) this.selectedMatch = updated;
@@ -509,11 +509,13 @@
         },
         toggleCivStats() {
           this.showCivStats = !this.showCivStats;
+          localStorage.setItem('aoe_showCivStats', this.showCivStats);
           fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'saveSettings', showCivStats: this.showCivStats })
           });
+          this.showNotify(this.showCivStats ? "Đã BẬT hiển thị Cung-Chém" : "Đã ẨN hiển thị Cung-Chém");
         },
         async addPlayer() {
           if (!this.newPlayerForm.name) return;
@@ -553,12 +555,21 @@
           (match.games || []).forEach(g => { if (g.winner === 'RED') red++; if (g.winner === 'BLUE') blue++; });
           return { red, blue };
         },
+        getGameCivStats(game) {
+          let cung = 0, chem = 0;
+          [...(game.redCivs || []), ...(game.blueCivs || [])].forEach(c => {
+            const t = this.getCivType(c);
+            if (t === 'cung') cung++;
+            if (t === 'chém') chem++;
+          });
+          return { cung, chem };
+        },
         getMatchCivStats(match) {
           let cung = 0, chem = 0;
           (match.games || []).forEach(g => {
-            [...(g.redCivs || []), ...(g.blueCivs || [])].forEach(c => {
-              const t = this.getCivType(c); if (t === 'cung') cung++; if (t === 'chém') chem++;
-            });
+            const st = this.getGameCivStats(g);
+            cung += st.cung;
+            chem += st.chem;
           });
           return { cung, chem };
         },
