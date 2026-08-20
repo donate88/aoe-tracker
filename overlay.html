@@ -38,7 +38,7 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[850px]">
       
-      <!-- HÀNG TRÊN CÙNG: BẢNG QUÂN & MÁY XO (NẰM TRÊN KHU VỰC TEAM 1) -->
+      <!-- HÀNG TRÊN CÙNG: BẢNG QUÂN & MÁY XO -->
       <div class="flex justify-start items-center gap-2 mb-1">
         <!-- KHỐI MÁY XO -->
         <div class="bg-slate-950/90 border border-amber-500/50 px-3 py-0.5 rounded-t-lg shadow-lg">
@@ -47,7 +47,7 @@
           </span>
         </div>
 
-        <!-- KHỐI BẢNG QUÂN + KÈO (ĐƯỢC ĐẨY LÊN TRÊN TEAM 1) -->
+        <!-- KHỐI BẢNG QUÂN + KÈO -->
         <div class="bg-slate-950/90 border border-slate-700/80 px-3 py-0.5 rounded-t-lg shadow-lg flex items-center gap-2">
           <span class="text-xs font-black text-white uppercase tracking-wider">
             Bảng quân
@@ -61,24 +61,22 @@
       <!-- KHUNG BẢNG QUÂN CHÍNH -->
       <div class="flex items-stretch bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[120px] rounded-r-xl rounded-b-xl overflow-hidden">
         
-        <!-- CỘT 1: TEAM 1 (ĐỎ - BÊN TRÁI: TÊN -> QUÂN) -->
+        <!-- CỘT 1: TEAM 1 (ĐỎ - SÁT NHAU) -->
         <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
-          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-            <span class="truncate max-w-[130px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
-            <span class="text-amber-400 font-mono font-black uppercase ml-2">
+          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-end items-center gap-2 text-sm font-bold leading-snug">
+            <span class="truncate text-right" :class="'p-color-' + (i % 8)">{{ p }}</span>
+            <span class="text-amber-400 font-mono font-black uppercase min-w-[50px] text-right">
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
         </div>
 
-        <!-- CỘT 2: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
+        <!-- CỘT 2: TỈ SỐ & CHẠM -->
         <div class="w-[120px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
-          <!-- HEADER CHẠM MẶC ĐỊNH (CHẠM 5) -->
           <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
             CHẠM {{ targetScore }}
           </div>
           
-          <!-- TỈ SỐ HIỆN TẠI -->
           <div class="my-auto py-1">
             <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
               <span>{{ score.red }}</span>
@@ -87,19 +85,18 @@
             </div>
           </div>
 
-          <!-- THÔNG BÁO TRẬN -->
           <div class="w-full bg-slate-950 text-[10px] py-0.5 text-slate-400 font-bold border-t border-slate-800">
             TRẬN {{ match.games ? match.games.length : 1 }}
           </div>
         </div>
 
-        <!-- CỘT 3: TEAM 2 (XANH - BÊN PHẢI: QUÂN -> TÊN) -->
+        <!-- CỘT 3: TEAM 2 (XANH - SÁT NHAU) -->
         <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center">
-          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-            <span class="text-amber-400 font-mono font-black uppercase mr-2">
+          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-start items-center gap-2 text-sm font-bold leading-snug">
+            <span class="text-amber-400 font-mono font-black uppercase min-w-[50px] text-left">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
             </span>
-            <span class="truncate max-w-[130px] text-right" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
+            <span class="truncate text-left" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
         </div>
 
@@ -114,7 +111,7 @@
       data() {
         return { 
           match: null,
-          targetScore: 5 // MẶC ĐỊNH LÀ CHẠM 5 (Bạn có thể đổi thành 100 tại đây)
+          targetScore: 5
         }
       },
       computed: {
