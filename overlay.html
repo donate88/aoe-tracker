@@ -38,11 +38,22 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[850px]">
       
-      <!-- HÀNG TRÊN CÙNG BÊN TRÁI: CHỮ MÁY XO TÁCH NỀN -->
-      <div class="flex justify-start mb-1">
+      <!-- HÀNG TRÊN CÙNG: BẢNG QUÂN & MÁY XO (NẰM TRÊN KHU VỰC TEAM 1) -->
+      <div class="flex justify-start items-center gap-2 mb-1">
+        <!-- KHỐI MÁY XO -->
         <div class="bg-slate-950/90 border border-amber-500/50 px-3 py-0.5 rounded-t-lg shadow-lg">
           <span class="text-xs font-black uppercase effect-xo tracking-wider">
             MÁY {{ match.streamerName || 'XO' }}
+          </span>
+        </div>
+
+        <!-- KHỐI BẢNG QUÂN + KÈO (ĐƯỢC ĐẨY LÊN TRÊN TEAM 1) -->
+        <div class="bg-slate-950/90 border border-slate-700/80 px-3 py-0.5 rounded-t-lg shadow-lg flex items-center gap-2">
+          <span class="text-xs font-black text-white uppercase tracking-wider">
+            Bảng quân
+          </span>
+          <span class="text-[11px] font-bold text-amber-400 bg-slate-900 border border-amber-500/30 px-1.5 py-0.2 rounded">
+            {{ match.mode }}
           </span>
         </div>
       </div>
@@ -50,31 +61,19 @@
       <!-- KHUNG BẢNG QUÂN CHÍNH -->
       <div class="flex items-stretch bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[120px] rounded-r-xl rounded-b-xl overflow-hidden">
         
-        <!-- CỘT 1: BẢNG QUÂN & TÊN KÈO (THẲNG HÀNG TEAM 1) -->
-        <div class="w-[160px] bg-slate-950 p-2 flex flex-col justify-center border-r border-slate-800">
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-base font-black text-white uppercase tracking-wider">
-              Bảng quân
-            </span>
-            <span class="text-xs font-bold text-amber-400 bg-slate-900 border border-amber-500/30 px-1.5 py-0.5 rounded">
-              {{ match.mode }}
-            </span>
-          </div>
-        </div>
-
-        <!-- CỘT 2: TEAM 1 (ĐỎ - BÊN TRÁI: TÊN -> QUÂN) -->
+        <!-- CỘT 1: TEAM 1 (ĐỎ - BÊN TRÁI: TÊN -> QUÂN) -->
         <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-            <span class="truncate max-w-[120px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
+            <span class="truncate max-w-[130px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
             <span class="text-amber-400 font-mono font-black uppercase ml-2">
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
         </div>
 
-        <!-- CỘT 3: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
+        <!-- CỘT 2: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
         <div class="w-[120px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
-          <!-- HEADER CHẠM -->
+          <!-- HEADER CHẠM MẶC ĐỊNH (CHẠM 5) -->
           <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
             CHẠM {{ targetScore }}
           </div>
@@ -94,13 +93,13 @@
           </div>
         </div>
 
-        <!-- CỘT 4: TEAM 2 (XANH - BÊN PHẢI: QUÂN -> TÊN) -->
+        <!-- CỘT 3: TEAM 2 (XANH - BÊN PHẢI: QUÂN -> TÊN) -->
         <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
             <span class="text-amber-400 font-mono font-black uppercase mr-2">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
             </span>
-            <span class="truncate max-w-[120px] text-right" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
+            <span class="truncate max-w-[130px] text-right" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
         </div>
 
@@ -115,7 +114,7 @@
       data() {
         return { 
           match: null,
-          targetScore: 5
+          targetScore: 5 // MẶC ĐỊNH LÀ CHẠM 5 (Bạn có thể đổi thành 100 tại đây)
         }
       },
       computed: {
@@ -161,8 +160,6 @@
 
               if (found) {
                 this.match = found;
-                const maxGames = found.games ? found.games.length : 0;
-                this.targetScore = maxGames > 5 ? 7 : (maxGames > 3 ? 5 : 3);
               }
             }
           } catch(e) {}
