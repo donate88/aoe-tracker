@@ -23,6 +23,15 @@
       animation: glow-xo 2s infinite ease-in-out;
     }
 
+    /* Hiệu ứng nhấp nháy nhẹ cho Chữ TRẬN */
+    @keyframes pulse-match {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.95); }
+    }
+    .animate-match {
+      animation: pulse-match 1.8s infinite ease-in-out;
+    }
+
     /* Bảng màu sắc tên Player AOE tiêu chuẩn */
     .p-color-0 { color: #60a5fa; } /* Xanh lam */
     .p-color-1 { color: #f87171; } /* Đỏ */
@@ -36,7 +45,6 @@
 </head>
 <body class="p-0 m-0">
   <div id="app" class="w-full">
-    <!-- CO BỀ NGANG KHUNG TỔNG XUỐNG 500PX -->
     <div v-if="match" class="flex flex-col w-[500px]">
       
       <!-- HÀNG TRÊN CÙNG: BẢNG QUÂN & MÁY XO -->
@@ -62,7 +70,7 @@
       <!-- KHUNG BẢNG QUÂN CHÍNH -->
       <div class="flex items-stretch justify-between bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden">
         
-        <!-- CỘT 1: TEAM 1 (ĐỎ - CẮT BỚT KHOẢNG TRẮNG, SÁT VÀO TỈ SỐ) -->
+        <!-- CỘT 1: TEAM 1 (ĐỎ) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
             <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
@@ -86,12 +94,15 @@
             </div>
           </div>
 
-          <div class="w-full bg-slate-950 text-[10px] py-0.5 text-slate-400 font-bold border-t border-slate-800">
-            TRẬN {{ match.games ? match.games.length : 1 }}
+          <!-- THÔNG BÁO TRẬN: NỔI BẬT NỀN ĐEN + VÀNG KIM + NHẤP NHÁY NHẸ -->
+          <div class="w-full bg-slate-950 py-0.5 border-t border-slate-800 flex justify-center items-center">
+            <span class="text-[11px] font-black text-amber-400 uppercase tracking-widest animate-match">
+              TRẬN {{ match.games ? match.games.length : 1 }}
+            </span>
           </div>
         </div>
 
-        <!-- CỘT 3: TEAM 2 (XANH - CẮT BỚT KHOẢNG TRẮNG, SÁT VÀO TỈ SỐ) -->
+        <!-- CỘT 3: TEAM 2 (XANH) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
             <span class="text-amber-400 font-mono font-black uppercase text-left">
