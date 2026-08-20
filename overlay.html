@@ -32,6 +32,19 @@
       animation: pulse-match 1.8s infinite ease-in-out;
     }
 
+    /* Animation Chữ Chạy qua màn hình mỗi 15 giây */
+    @keyframes marquee-run {
+      0% { transform: translateX(100%); opacity: 0; }
+      10% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateX(-100%); opacity: 0; }
+    }
+    .run-marquee {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marquee-run 6s linear infinite;
+    }
+
     /* Bảng màu sắc tên Player AOE tiêu chuẩn */
     .p-color-0 { color: #60a5fa; } /* Xanh lam */
     .p-color-1 { color: #f87171; } /* Đỏ */
@@ -68,7 +81,7 @@
       </div>
 
       <!-- KHUNG BẢNG QUÂN CHÍNH -->
-      <div class="flex items-stretch justify-between bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden">
+      <div class="flex items-stretch justify-between bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden relative">
         
         <!-- CỘT 1: TEAM 1 (ĐỎ) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
@@ -94,7 +107,6 @@
             </div>
           </div>
 
-          <!-- THÔNG BÁO TRẬN: NỔI BẬT NỀN ĐEN + VÀNG KIM + NHẤP NHÁY NHẸ -->
           <div class="w-full bg-slate-950 py-0.5 border-t border-slate-800 flex justify-center items-center">
             <span class="text-[11px] font-black text-amber-400 uppercase tracking-widest animate-match">
               TRẬN {{ match.games ? match.games.length : 1 }}
@@ -113,6 +125,16 @@
         </div>
 
       </div>
+
+      <!-- THANH THÔNG BÁO CHỮ CHẠY HÀNG DƯỚI (XUẤT HIỆN MỖI 15S) -->
+      <div class="w-full h-5 overflow-hidden bg-slate-950/90 border-x border-b border-amber-500/30 rounded-b-lg flex items-center relative mt-0.5 px-2">
+        <div v-if="showBanner" class="w-full text-[11px] font-bold text-amber-300 flex justify-center items-center">
+          <span class="run-marquee">
+            🔗 Xem trực tiếp tỉ số & lịch sử kèo đấu tại: <span class="text-white underline font-mono ml-1">{{ matchLink }}</span>
+          </span>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -123,7 +145,8 @@
       data() {
         return { 
           match: null,
-          targetScore: 5
+          targetScore: 5,
+          showBanner: true
         }
       },
       computed: {
@@ -141,6 +164,9 @@
             });
           }
           return { red, blue };
+        },
+        matchLink() {
+          return this.match ? `donate88.github.io/aoe-tracker/?matchId=${this.match.id}` : '';
         }
       },
       methods: {
@@ -172,11 +198,21 @@
               }
             }
           } catch(e) {}
+        },
+        startBannerTimer() {
+          // Chu kỳ 15 giây bật/tắt để chạy chữ 1 lần
+          setInterval(() => {
+            this.showBanner = false;
+            this.$nextTick(() => {
+              this.showBanner = true;
+            });
+          }, 15000);
         }
       },
       mounted() {
         this.fetchMatch();
         setInterval(this.fetchMatch, 3000);
+        this.startBannerTimer();
       }
     }).mount('#app');
   </script>
