@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>AOE Overlay OBS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&display=swap');
+    body { font-family: 'Roboto Condensed', sans-serif; background: transparent; overflow: hidden; }
+  </style>
+</head>
+<body class="p-2">
+  <div id="app">
+    <div v-if="match" class="inline-flex flex-col bg-slate-950/90 border-2 border-amber-500/60 rounded-xl shadow-2xl p-3 text-white backdrop-blur-md min-w-[420px]">
+      
+      <!-- TIÊU ĐỀ & TỈ SỐ -->
+      <div class="flex justify-between items-center border-b border-amber-500/30 pb-2 mb-2">
+        <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">
+          🎮 KÈO {{ match.mode }} - {{ match.streamerName }}
+        </div>
+        <!-- TỈ SỐ CHUNG CUỘC -->
+        <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
+          <span class="text-xl font-black text-red-500">{{ score.red }}</span>
+          <span class="text-xs text-slate-500 font-bold">-</span>
+          <span class="text-xl font-black text-blue-500">{{ score.blue }}</span>
+        </div>
+      </div>
+
+      <!-- BẢNG QUÂN TRẬN HIỆN TẠI -->
+      <div v-if="latestGame" class="space-y-1.5">
+        <div class="text-[11px] text-amber-300 font-bold flex justify-between px-1">
+          <span>Trận {{ match.games.length }}</span>
+          <span v-if="latestGame.winner === 'PENDING'" class="text-amber-400 animate-pulse">⏳ Đang thi đấu</span>
+          <span v-else-if="latestGame.winner === 'RED'" class="text-red-400">🔴 Đỏ Thắng</span>
+          <span v-else class="text-blue-400">🔵 Xanh Thắng</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <!-- TEAM ĐỎ -->
+          <div class="bg-red-950/40 border border-red-800/50 p-2 rounded-lg space-y-1">
+            <div v-for="(p, i) in match.redTeam" :key="i" class="flex justify-between items-center">
+              <span class="font-bold text-red-200 truncate max-w-[100px]">{{ p }}:</span>
+              <span class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase shadow">
+                {{ latestGame.redCivs[i] || '---' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- TEAM XANH -->
+          <div class="bg-blue-950/40 border border-blue-800/50 p-2 rounded-lg space-y-1">
+            <div v-for="(p, i) in match.blueTeam" :key="i" class="flex justify-between items-center">
+              <span class="font-bold text-blue-200 truncate max-w-[100px]">{{ p }}:</span>
+              <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase shadow">
+                {{ latestGame.blueCivs[i] || '---' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyyzz3o-A56_J3ikoo_8dOM3ilBSeQUNUr7NW30fQfw-iHk_f9wRsXA8T_SokeUu-CU/exec";
+
+    Vue.createApp({
+      data() {
+        return { match: null }
+      },
+      computed: {
+        latestGame() {
+          return (this.match && this.match.games) ? this.match.games[this.match.games.length - 1] : null;
+        },
+        score() {
+          let red = 0, blue = 0;
+          if (this.match && this.match.games) {
+            this.match.games.forEach(g => {
+              if (g.winner === 'RED') red++;
+              if (g.winner === 'BLUE') blue++;
+            });
+          }
+          return { red, blue };
+        }
+      },
+      methods: {
+        async fetchMatch() {
+          const params = new URLSearchParams(window.location.search);
+          const matchId = params.get('matchId');
+          if (!matchId) return;
+
+          try {
+            const res = await fetch(API_URL + "?action=getInitialData");
+            const data = await res.json();
+            if (data.matches) {
+              const found = data.matches.find(m => m.id === matchId);
+              if (found) this.match = found;
+            }
+          } catch(e) {}
+        }
+      },
+      mounted() {
+        this.fetchMatch();
+        // Tự động làm mới mỗi 3 giây để cập nhật quân/tỉ số tức thì
+        setInterval(this.fetchMatch, 3000);
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
