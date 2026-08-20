@@ -35,8 +35,9 @@
   </style>
 </head>
 <body class="p-0 m-0">
-  <div id="app" class="w-full flex justify-center">
-    <div v-if="match" class="flex flex-col w-[800px]">
+  <div id="app" class="w-full">
+    <!-- RÚT NGẮN BỀ NGANG TỔNG THỂ XUỐNG 680PX -->
+    <div v-if="match" class="flex flex-col w-[680px]">
       
       <!-- HÀNG TRÊN CÙNG: BẢNG QUÂN & MÁY XO -->
       <div class="flex justify-start items-center gap-2 mb-1">
@@ -59,25 +60,25 @@
       </div>
 
       <!-- KHUNG BẢNG QUÂN CHÍNH -->
-      <div class="flex items-stretch bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[120px] rounded-r-xl rounded-b-xl overflow-hidden">
+      <div class="flex items-stretch bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden">
         
-        <!-- CỘT 1: TEAM 1 (ĐỎ - TÊN ĐẨY TRÁI, QUÂN ĐẨY PHẢI) -->
-        <div class="flex-1 px-4 py-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
-          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-            <span class="truncate max-w-[150px] text-left" :class="'p-color-' + (i % 8)">{{ p }}</span>
-            <span class="text-amber-400 font-mono font-black uppercase text-right w-[60px]">
+        <!-- CỘT 1: TEAM 1 (ĐỎ - TÊN & QUÂN SÁT NHAU) -->
+        <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
+          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-end items-center gap-2 text-sm font-bold leading-snug">
+            <span class="truncate text-right max-w-[150px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
+            <span class="text-amber-400 font-mono font-black uppercase text-right w-[50px]">
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
         </div>
 
-        <!-- CỘT 2: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
+        <!-- CỘT 2: TỈ SỐ & CHẠM -->
         <div class="w-[110px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
           <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
             CHẠM {{ targetScore }}
           </div>
           
-          <div class="my-auto py-1">
+          <div class="my-auto py-0.5">
             <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
               <span>{{ score.red }}</span>
               <span class="text-slate-500 text-xl">-</span>
@@ -90,13 +91,13 @@
           </div>
         </div>
 
-        <!-- CỘT 3: TEAM 2 (XANH - QUÂN ĐẨY TRÁI, TÊN ĐẨY PHẢI) -->
-        <div class="flex-1 px-4 py-2 bg-black/80 flex flex-col justify-center">
-          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-            <span class="text-amber-400 font-mono font-black uppercase text-left w-[60px]">
+        <!-- CỘT 3: TEAM 2 (XANH - QUÂN & TÊN SÁT NHAU) -->
+        <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
+          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-start items-center gap-2 text-sm font-bold leading-snug">
+            <span class="text-amber-400 font-mono font-black uppercase text-left w-[50px]">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
             </span>
-            <span class="truncate max-w-[150px] text-right" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
+            <span class="truncate text-left max-w-[150px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
         </div>
 
@@ -111,7 +112,7 @@
       data() {
         return { 
           match: null,
-          targetScore: 5 // MẶC ĐỊNH CHẠM 5
+          targetScore: 5
         }
       },
       computed: {
