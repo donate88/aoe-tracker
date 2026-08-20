@@ -332,8 +332,15 @@
 
     </div>
 
-    <footer class="mt-8 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
-      AOE Match Tracker &bull; Powered by XO &bull; Build: {{ buildTime }}
+    <!-- FOOTER HIỂN THỊ VERSION BUILD -->
+    <footer class="mt-8 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500 flex justify-center items-center gap-2">
+      <span>AOE Match Tracker &bull; Powered by XO</span>
+      <span>&bull;</span>
+      <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono font-bold">
+        {{ appVersion }}
+      </span>
+      <span>&bull;</span>
+      <span>Build: {{ buildTime }}</span>
     </footer>
   </div>
 
@@ -344,6 +351,7 @@
       data() {
         const localCivStats = localStorage.getItem('aoe_showCivStats');
         return {
+          appVersion: 'v1.1.1',
           currentTab: 'matches',
           filterStatus: 'ALL',
           isLoading: false,
@@ -392,7 +400,6 @@
         goHome() {
           this.currentTab = 'matches';
           this.selectedMatch = null;
-          // Xóa param trên URL
           window.history.pushState({}, '', window.location.pathname);
         },
         copyMatchLink(matchId) {
@@ -406,7 +413,6 @@
         selectMatch(match) {
           this.selectedMatch = match;
           this.currentTab = 'detail';
-          // Gắn param vào thanh địa chỉ mà không reload trang
           window.history.pushState({}, '', `?matchId=${match.id}`);
         },
         checkUrlForMatch() {
@@ -564,7 +570,6 @@
             if (data.players) this.players = data.players;
             if (data.matches) this.matches = data.matches;
             
-            // Tự động chuyển hướng thẳng đến kèo đấu nếu URL có chứa ?matchId=...
             this.checkUrlForMatch();
             
             if (this.selectedMatch) {
