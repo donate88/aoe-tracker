@@ -2,60 +2,105 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>AOE Overlay OBS</title>
+  <title>AOE Overlay OBS - Horizontal Bar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&display=swap');
-    body { font-family: 'Roboto Condensed', sans-serif; background: transparent; overflow: hidden; }
+    
+    body { 
+      font-family: 'Roboto Condensed', sans-serif; 
+      background: transparent; 
+      overflow: hidden; 
+    }
+
+    /* Hiệu ứng nhấp nháy chữ Bảng quân */
+    @keyframes blink-text {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .animate-blink {
+      animation: blink-text 1.2s infinite ease-in-out;
+    }
+
+    /* Hiệu ứng chữ Máy XO */
+    @keyframes glow-xo {
+      0%, 100% { text-shadow: 0 0 8px #f59e0b, 0 0 15px #f59e0b; color: #fbbf24; }
+      50% { text-shadow: 0 0 12px #ef4444, 0 0 22px #ef4444; color: #f87171; }
+    }
+    .effect-xo {
+      animation: glow-xo 2s infinite ease-in-out;
+    }
+
+    /* Bảng màu sắc tên Player AOE tiêu chuẩn */
+    .p-color-0 { color: #60a5fa; } /* Xanh lam */
+    .p-color-1 { color: #f87171; } /* Đỏ */
+    .p-color-2 { color: #facc15; } /* Vàng */
+    .p-color-3 { color: #c084fc; } /* Tím */
+    .p-color-4 { color: #38bdf8; } /* Cung nhạt */
+    .p-color-5 { color: #4ade80; } /* Xanh lá */
+    .p-color-6 { color: #94a3b8; } /* Xám */
+    .p-color-7 { color: #f97316; } /* Cam */
   </style>
 </head>
-<body class="p-2">
-  <div id="app">
-    <div v-if="match" class="inline-flex flex-col bg-slate-950/90 border-2 border-amber-500/60 rounded-xl shadow-2xl p-3 text-white backdrop-blur-md min-w-[420px]">
+<body class="p-0 m-0">
+  <div id="app" class="w-full">
+    <div v-if="match" class="flex items-stretch bg-black/95 text-white border-t-2 border-slate-700 shadow-2xl h-[120px] w-[850px]">
       
-      <!-- TIÊU ĐỀ & TỈ SỐ -->
-      <div class="flex justify-between items-center border-b border-amber-500/30 pb-2 mb-2">
-        <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">
-          🎮 KÈO {{ match.mode }} - {{ match.streamerName }}
+      <!-- CỘT 1: BẢNG QUÂN & CHỮ MÁY XO (TR BÊN TRÁI) -->
+      <div class="w-[140px] bg-slate-950 p-2 flex flex-col justify-between border-r border-slate-800">
+        <div>
+          <div class="text-base font-black text-white uppercase tracking-wider animate-blink">
+            Bảng quân
+          </div>
+          <div class="text-[11px] font-bold text-slate-400">
+            Kèo {{ match.mode }}
+          </div>
         </div>
-        <!-- TỈ SỐ CHUNG CUỘC -->
-        <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
-          <span class="text-xl font-black text-red-500">{{ score.red }}</span>
-          <span class="text-xs text-slate-500 font-bold">-</span>
-          <span class="text-xl font-black text-blue-500">{{ score.blue }}</span>
+        <div class="text-sm font-black uppercase effect-xo tracking-wide">
+          Máy {{ match.streamerName || 'XO' }}
         </div>
       </div>
 
-      <!-- BẢNG QUÂN TRẬN HIỆN TẠI -->
-      <div v-if="latestGame" class="space-y-1.5">
-        <div class="text-[11px] text-amber-300 font-bold flex justify-between px-1">
-          <span>Trận {{ match.games.length }}</span>
-          <span v-if="latestGame.winner === 'PENDING'" class="text-amber-400 animate-pulse">⏳ Đang thi đấu</span>
-          <span v-else-if="latestGame.winner === 'RED'" class="text-red-400">🔴 Đỏ Thắng</span>
-          <span v-else class="text-blue-400">🔵 Xanh Thắng</span>
+      <!-- CỘT 2: TEAM 1 (ĐỎ - BÊN TRÁI) -->
+      <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
+        <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
+          <span class="truncate max-w-[120px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
+          <span class="text-amber-400 font-mono font-black uppercase ml-2">
+            {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+          </span>
+        </div>
+      </div>
+
+      <!-- CỘT 3: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
+      <div class="w-[120px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
+        <!-- HEADER CHẠM -->
+        <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
+          CHẠM {{ targetScore }}
+        </div>
+        
+        <!-- TỈ SỐ HIỆN TẠI -->
+        <div class="my-auto py-1">
+          <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
+            <span>{{ score.red }}</span>
+            <span class="text-slate-500 text-xl">-</span>
+            <span>{{ score.blue }}</span>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <!-- TEAM ĐỎ -->
-          <div class="bg-red-950/40 border border-red-800/50 p-2 rounded-lg space-y-1">
-            <div v-for="(p, i) in match.redTeam" :key="i" class="flex justify-between items-center">
-              <span class="font-bold text-red-200 truncate max-w-[100px]">{{ p }}:</span>
-              <span class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase shadow">
-                {{ latestGame.redCivs[i] || '---' }}
-              </span>
-            </div>
-          </div>
+        <!-- THÔNG BÁO TRẬN -->
+        <div class="w-full bg-slate-950 text-[10px] py-0.5 text-slate-400 font-bold border-t border-slate-800">
+          TRẬN {{ match.games ? match.games.length : 1 }}
+        </div>
+      </div>
 
-          <!-- TEAM XANH -->
-          <div class="bg-blue-950/40 border border-blue-800/50 p-2 rounded-lg space-y-1">
-            <div v-for="(p, i) in match.blueTeam" :key="i" class="flex justify-between items-center">
-              <span class="font-bold text-blue-200 truncate max-w-[100px]">{{ p }}:</span>
-              <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase shadow">
-                {{ latestGame.blueCivs[i] || '---' }}
-              </span>
-            </div>
-          </div>
+      <!-- CỘT 4: TEAM 2 (XANH - BÊN PHẢI) -->
+      <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center">
+        <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
+          <span class="truncate max-w-[120px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
+          <span class="text-amber-400 font-mono font-black uppercase ml-2">
+            {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
+          </span>
         </div>
       </div>
 
@@ -67,11 +112,16 @@
 
     Vue.createApp({
       data() {
-        return { match: null }
+        return { 
+          match: null,
+          targetScore: 5 // Mặc định chạm 5
+        }
       },
       computed: {
         latestGame() {
-          return (this.match && this.match.games) ? this.match.games[this.match.games.length - 1] : null;
+          return (this.match && this.match.games && this.match.games.length > 0) 
+            ? this.match.games[this.match.games.length - 1] 
+            : null;
         },
         score() {
           let red = 0, blue = 0;
@@ -85,6 +135,10 @@
         }
       },
       methods: {
+        getCivName(civ) {
+          if (!civ || civ === 'Random') return '---';
+          return civ.toUpperCase();
+        },
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
           const matchId = params.get('matchId');
@@ -95,14 +149,19 @@
             const data = await res.json();
             if (data.matches) {
               const found = data.matches.find(m => m.id === matchId);
-              if (found) this.match = found;
+              if (found) {
+                this.match = found;
+                // Tự tính chạm dựa vào số ván hoặc mặc định chạm 3, 5, 7
+                const maxGames = found.games ? found.games.length : 0;
+                this.targetScore = maxGames > 5 ? 7 : (maxGames > 3 ? 5 : 3);
+              }
             }
           } catch(e) {}
         }
       },
       mounted() {
         this.fetchMatch();
-        // Tự động làm mới mỗi 3 giây để cập nhật quân/tỉ số tức thì
+        // Quét cập nhật dữ liệu liên tục mỗi 3 giây
         setInterval(this.fetchMatch, 3000);
       }
     }).mount('#app');
