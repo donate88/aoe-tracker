@@ -156,7 +156,7 @@
                   Tổng Cung - Chém: <span class="text-cyan-400 font-bold">{{ activeMatchCivStats.cung }}</span> - <span class="text-yellow-400 font-bold">{{ activeMatchCivStats.chem }}</span>
                 </div>
               </div>
-              <button v-if="selectedMatch.status === 'LIVE'" @click="finishMatch" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl shadow border border-amber-400 text-xs">🏁 KẾT THÚC KÈO</button>
+              <button v-if="selectedMatch.status === 'LIVE' && canModify(selectedMatch)" @click="finishMatch" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl shadow border border-amber-400 text-xs">🏁 KẾT THÚC KÈO</button>
             </div>
           </div>
 
@@ -182,7 +182,7 @@
                   <span v-if="showCivStats" class="text-[11px] text-slate-400">
                     Tỉ lệ: <span class="text-cyan-400 font-bold">{{ getGameCivStats(g).cung }} Cung</span> - <span class="text-yellow-400 font-bold">{{ getGameCivStats(g).chem }} Chém</span>
                   </span>
-                  <button v-if="canEdit" @click="deleteGameFromMatch(idx)" class="text-[10px] bg-red-950 text-red-300 border border-red-700/50 px-2 py-0.5 rounded">Xóa</button>
+                  <button v-if="canModify(selectedMatch)" @click="deleteGameFromMatch(idx)" class="text-[10px] bg-red-950 text-red-300 border border-red-700/50 px-2 py-0.5 rounded">Xóa</button>
                 </div>
               </div>
 
@@ -383,6 +383,11 @@
         activeMatchCivStats() { return this.selectedMatch ? this.getMatchCivStats(this.selectedMatch) : { cung: 0, chem: 0 }; }
       },
       methods: {
+        canModify(match) {
+          if (!match) return false;
+          if (this.isAdmin) return true;
+          return this.sessionPlayerName && this.sessionPlayerName === match.streamerName && this.sessionPlayerPass;
+        },
         goHome() { this.currentTab = 'matches'; this.selectedMatch = null; },
         openAdminModal() { this.adminPasswordInput = ''; this.showAdminModal = true; },
         openAnalytics() {
@@ -417,12 +422,18 @@
         },
         logoutPlayer() { this.sessionPlayerName = ''; this.sessionPlayerPass = ''; sessionStorage.clear(); },
         async setWinner(gameIndex, winnerTeam) {
-          if (!this.canEdit) {
-            this.openLoginUpdaterModal();
+          if (!this.canModify(this.selectedMatch)) {
+            if (!this.sessionPlayerName) {
+              this.openLoginUpdaterModal();
+            } else {
+              this.showNotify("Chỉ người tạo kèo hoặc Admin mới có quyền đổi kết quả!", "error");
+            }
             return;
           }
+
           this.selectedMatch.games[gameIndex].winner = winnerTeam;
           this.selectedMatch = { ...this.selectedMatch };
+
           try {
             const res = await fetch(API_URL, {
               method: 'POST',
@@ -448,8 +459,8 @@
           }
         },
         async finishMatch() {
-          if (!this.canEdit) {
-            this.openLoginUpdaterModal();
+          if (!this.canModify(this.selectedMatch)) {
+            this.showNotify("Bạn không có quyền kết thúc kèo này!", "error");
             return;
           }
           if (confirm("Xác nhận KẾT THÚC kèo đấu chung cuộc này?")) {
@@ -457,36 +468,56 @@
               const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'finishMatch', matchId: this.selectedMatch.id })
+                body: JSON.stringify({ 
+                  action: 'finishMatch', 
+                  matchId: this.selectedMatch.id,
+                  updatedBy: this.sessionPlayerName,
+                  password: this.sessionPlayerPass,
+                  isAdmin: this.isAdmin
+                })
               });
               const data = await res.json();
               if (data.status === 'success') {
                 this.selectedMatch.status = 'FINISHED';
                 this.showNotify("Đã kết thúc kèo đấu!");
+              } else {
+                this.showNotify(data.message, "error");
               }
             } catch (e) { this.showNotify("Lỗi kết nối!", "error"); }
           }
         },
         async deleteGameFromMatch(gameIndex) {
-          if (!this.canEdit) return;
+          if (!this.canModify(this.selectedMatch)) {
+            this.showNotify("Bạn không có quyền xóa trận thuộc kèo này!", "error");
+            return;
+          }
           if (confirm(`Bạn có chắc muốn xóa Trận ${gameIndex + 1}?`)) {
             this.selectedMatch.games.splice(gameIndex, 1);
             await fetch(API_URL, { 
               method: 'POST', 
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: 'saveMatch', match: this.selectedMatch }) 
+              body: JSON.stringify({ 
+                action: 'saveMatch', 
+                match: this.selectedMatch,
+                updatedBy: this.sessionPlayerName,
+                password: this.sessionPlayerPass,
+                isAdmin: this.isAdmin
+              }) 
             });
             this.showNotify(`Đã xóa Trận ${gameIndex + 1}`);
           }
         },
         async deleteSingleMatch(matchId) {
-          if (!this.isAdmin) return;
+          if (!this.isAdmin) {
+            this.showNotify("Chỉ Admin mới có quyền xóa hẳn kèo đấu!", "error");
+            return;
+          }
           if (confirm("Xác nhận XÓA VĨNH VIỄN kèo đấu này?")) {
             try {
               await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId] })
+                body: JSON.stringify({ action: 'deleteMatches', matchIds: [matchId], isAdmin: this.isAdmin })
               });
               this.matches = this.matches.filter(m => m.id !== matchId);
               if (this.selectedMatch && this.selectedMatch.id === matchId) this.goHome();
@@ -540,7 +571,7 @@
           await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'savePlayers', players: this.players })
+            body: JSON.stringify({ action: 'savePlayers', players: this.players, isAdmin: this.isAdmin })
           });
           this.showNotify("Đã cập nhật danh sách Player!");
         },
