@@ -97,6 +97,7 @@
                 <span v-if="match.streamerName" class="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded font-mono">🎮 {{ match.streamerName }}</span>
               </div>
               <div class="flex items-center gap-2">
+                <button @click.stop="copyMatchLink(match.id)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20" title="Copy Link"><i class="fa-solid fa-link"></i> Link</button>
                 <span class="text-[11px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ match.formattedTime }}</span>
                 <button v-if="isAdmin" @click.stop="deleteSingleMatch(match.id)" class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-0.5 rounded shadow border border-red-400"><i class="fa-solid fa-trash-can"></i> Xóa</button>
               </div>
@@ -388,7 +389,37 @@
           if (this.isAdmin) return true;
           return this.sessionPlayerName && this.sessionPlayerName === match.streamerName && this.sessionPlayerPass;
         },
-        goHome() { this.currentTab = 'matches'; this.selectedMatch = null; },
+        goHome() {
+          this.currentTab = 'matches';
+          this.selectedMatch = null;
+          // Xóa param trên URL
+          window.history.pushState({}, '', window.location.pathname);
+        },
+        copyMatchLink(matchId) {
+          const url = `${window.location.origin}${window.location.pathname}?matchId=${matchId}`;
+          navigator.clipboard.writeText(url).then(() => {
+            this.showNotify("Đã sao chép đường dẫn trực tiếp kèo đấu!");
+          }).catch(() => {
+            this.showNotify("Không thể tự động sao chép link", "error");
+          });
+        },
+        selectMatch(match) {
+          this.selectedMatch = match;
+          this.currentTab = 'detail';
+          // Gắn param vào thanh địa chỉ mà không reload trang
+          window.history.pushState({}, '', `?matchId=${match.id}`);
+        },
+        checkUrlForMatch() {
+          const params = new URLSearchParams(window.location.search);
+          const matchId = params.get('matchId');
+          if (matchId && this.matches.length > 0) {
+            const found = this.matches.find(m => m.id === matchId);
+            if (found) {
+              this.selectedMatch = found;
+              this.currentTab = 'detail';
+            }
+          }
+        },
         openAdminModal() { this.adminPasswordInput = ''; this.showAdminModal = true; },
         openAnalytics() {
           this.currentTab = 'analytics';
@@ -532,6 +563,10 @@
             const data = await res.json();
             if (data.players) this.players = data.players;
             if (data.matches) this.matches = data.matches;
+            
+            // Tự động chuyển hướng thẳng đến kèo đấu nếu URL có chứa ?matchId=...
+            this.checkUrlForMatch();
+            
             if (this.selectedMatch) {
               const updated = this.matches.find(m => m.id === this.selectedMatch.id);
               if (updated) this.selectedMatch = updated;
@@ -575,7 +610,6 @@
           });
           this.showNotify("Đã cập nhật danh sách Player!");
         },
-        selectMatch(match) { this.selectedMatch = match; this.currentTab = 'detail'; },
         getCivType(civName) { const f = this.civs.find(c => c.name === civName); return f ? f.type : ''; },
         getCivTypeClass(civName) {
           const t = this.getCivType(civName);
