@@ -47,7 +47,7 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex items-stretch bg-black/95 text-white border-t-2 border-slate-700 shadow-2xl h-[120px] w-[850px]">
       
-      <!-- CỘT 1: BẢNG QUÂN & CHỮ MÁY XO (TR BÊN TRÁI) -->
+      <!-- CỘT 1: BẢNG QUÂN & CHỮ MÁY XO -->
       <div class="w-[140px] bg-slate-950 p-2 flex flex-col justify-between border-r border-slate-800">
         <div>
           <div class="text-base font-black text-white uppercase tracking-wider animate-blink">
@@ -114,7 +114,7 @@
       data() {
         return { 
           match: null,
-          targetScore: 5 // Mặc định chạm 5
+          targetScore: 5
         }
       },
       computed: {
@@ -142,16 +142,29 @@
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
           const matchId = params.get('matchId');
-          if (!matchId) return;
+          const streamer = params.get('streamer');
 
           try {
             const res = await fetch(API_URL + "?action=getInitialData");
             const data = await res.json();
-            if (data.matches) {
-              const found = data.matches.find(m => m.id === matchId);
+            if (data.matches && data.matches.length > 0) {
+              let found = null;
+              
+              // 1. Nếu có truyền matchId cụ thể
+              if (matchId) {
+                found = data.matches.find(m => m.id === matchId);
+              } 
+              // 2. Nếu có truyền streamer -> Tự tìm trận đang LIVE của streamer đó
+              else if (streamer) {
+                found = data.matches.find(m => m.status === 'LIVE' && m.streamerName && m.streamerName.toLowerCase() === streamer.toLowerCase());
+              } 
+              // 3. Nếu không truyền gì -> Tự lấy trận LIVE mới nhất của bất kỳ ai
+              else {
+                found = data.matches.find(m => m.status === 'LIVE') || data.matches[0];
+              }
+
               if (found) {
                 this.match = found;
-                // Tự tính chạm dựa vào số ván hoặc mặc định chạm 3, 5, 7
                 const maxGames = found.games ? found.games.length : 0;
                 this.targetScore = maxGames > 5 ? 7 : (maxGames > 3 ? 5 : 3);
               }
@@ -161,7 +174,6 @@
       },
       mounted() {
         this.fetchMatch();
-        // Quét cập nhật dữ liệu liên tục mỗi 3 giây
         setInterval(this.fetchMatch, 3000);
       }
     }).mount('#app');
