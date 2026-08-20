@@ -14,15 +14,6 @@
       overflow: hidden; 
     }
 
-    /* Hiệu ứng nhấp nháy chữ Bảng quân */
-    @keyframes blink-text {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-    .animate-blink {
-      animation: blink-text 1.2s infinite ease-in-out;
-    }
-
     /* Hiệu ứng chữ Máy XO */
     @keyframes glow-xo {
       0%, 100% { text-shadow: 0 0 8px #f59e0b, 0 0 15px #f59e0b; color: #fbbf24; }
@@ -45,65 +36,75 @@
 </head>
 <body class="p-0 m-0">
   <div id="app" class="w-full">
-    <div v-if="match" class="flex items-stretch bg-black/95 text-white border-t-2 border-slate-700 shadow-2xl h-[120px] w-[850px]">
+    <div v-if="match" class="flex flex-col w-[850px]">
       
-      <!-- CỘT 1: BẢNG QUÂN & CHỮ MÁY XO -->
-      <div class="w-[140px] bg-slate-950 p-2 flex flex-col justify-between border-r border-slate-800">
-        <div>
-          <div class="text-base font-black text-white uppercase tracking-wider animate-blink">
-            Bảng quân
-          </div>
-          <div class="text-[11px] font-bold text-slate-400">
-            Kèo {{ match.mode }}
-          </div>
-        </div>
-        <div class="text-sm font-black uppercase effect-xo tracking-wide">
-          Máy {{ match.streamerName || 'XO' }}
-        </div>
-      </div>
-
-      <!-- CỘT 2: TEAM 1 (ĐỎ - BÊN TRÁI) -->
-      <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
-        <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-          <span class="truncate max-w-[120px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
-          <span class="text-amber-400 font-mono font-black uppercase ml-2">
-            {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+      <!-- HÀNG TRÊN CÙNG BÊN TRÁI: CHỮ MÁY XO TÁCH NỀN -->
+      <div class="flex justify-start mb-1">
+        <div class="bg-slate-950/90 border border-amber-500/50 px-3 py-0.5 rounded-t-lg shadow-lg">
+          <span class="text-xs font-black uppercase effect-xo tracking-wider">
+            MÁY {{ match.streamerName || 'XO' }}
           </span>
         </div>
       </div>
 
-      <!-- CỘT 3: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
-      <div class="w-[120px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
-        <!-- HEADER CHẠM -->
-        <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
-          CHẠM {{ targetScore }}
-        </div>
+      <!-- KHUNG BẢNG QUÂN CHÍNH -->
+      <div class="flex items-stretch bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[120px] rounded-r-xl rounded-b-xl overflow-hidden">
         
-        <!-- TỈ SỐ HIỆN TẠI -->
-        <div class="my-auto py-1">
-          <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
-            <span>{{ score.red }}</span>
-            <span class="text-slate-500 text-xl">-</span>
-            <span>{{ score.blue }}</span>
+        <!-- CỘT 1: BẢNG QUÂN & TÊN KÈO (THẲNG HÀNG TEAM 1) -->
+        <div class="w-[160px] bg-slate-950 p-2 flex flex-col justify-center border-r border-slate-800">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-base font-black text-white uppercase tracking-wider">
+              Bảng quân
+            </span>
+            <span class="text-xs font-bold text-amber-400 bg-slate-900 border border-amber-500/30 px-1.5 py-0.5 rounded">
+              {{ match.mode }}
+            </span>
           </div>
         </div>
 
-        <!-- THÔNG BÁO TRẬN -->
-        <div class="w-full bg-slate-950 text-[10px] py-0.5 text-slate-400 font-bold border-t border-slate-800">
-          TRẬN {{ match.games ? match.games.length : 1 }}
+        <!-- CỘT 2: TEAM 1 (ĐỎ - BÊN TRÁI: TÊN -> QUÂN) -->
+        <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center border-r border-slate-800">
+          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
+            <span class="truncate max-w-[120px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
+            <span class="text-amber-400 font-mono font-black uppercase ml-2">
+              {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <!-- CỘT 4: TEAM 2 (XANH - BÊN PHẢI) -->
-      <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center">
-        <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
-          <span class="truncate max-w-[120px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
-          <span class="text-amber-400 font-mono font-black uppercase ml-2">
-            {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
-          </span>
+        <!-- CỘT 3: TỈ SỐ & CHẠM (CHÍNH GIỮA) -->
+        <div class="w-[120px] flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
+          <!-- HEADER CHẠM -->
+          <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">
+            CHẠM {{ targetScore }}
+          </div>
+          
+          <!-- TỈ SỐ HIỆN TẠI -->
+          <div class="my-auto py-1">
+            <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
+              <span>{{ score.red }}</span>
+              <span class="text-slate-500 text-xl">-</span>
+              <span>{{ score.blue }}</span>
+            </div>
+          </div>
+
+          <!-- THÔNG BÁO TRẬN -->
+          <div class="w-full bg-slate-950 text-[10px] py-0.5 text-slate-400 font-bold border-t border-slate-800">
+            TRẬN {{ match.games ? match.games.length : 1 }}
+          </div>
         </div>
-      </div>
 
+        <!-- CỘT 4: TEAM 2 (XANH - BÊN PHẢI: QUÂN -> TÊN) -->
+        <div class="flex-1 p-2 bg-black/80 flex flex-col justify-center">
+          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center text-sm font-bold leading-snug">
+            <span class="text-amber-400 font-mono font-black uppercase mr-2">
+              {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
+            </span>
+            <span class="truncate max-w-[120px] text-right" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -150,16 +151,11 @@
             if (data.matches && data.matches.length > 0) {
               let found = null;
               
-              // 1. Nếu có truyền matchId cụ thể
               if (matchId) {
                 found = data.matches.find(m => m.id === matchId);
-              } 
-              // 2. Nếu có truyền streamer -> Tự tìm trận đang LIVE của streamer đó
-              else if (streamer) {
+              } else if (streamer) {
                 found = data.matches.find(m => m.status === 'LIVE' && m.streamerName && m.streamerName.toLowerCase() === streamer.toLowerCase());
-              } 
-              // 3. Nếu không truyền gì -> Tự lấy trận LIVE mới nhất của bất kỳ ai
-              else {
+              } else {
                 found = data.matches.find(m => m.status === 'LIVE') || data.matches[0];
               }
 
