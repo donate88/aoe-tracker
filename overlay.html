@@ -232,7 +232,11 @@
             this.showMarquee = false;
             
             setTimeout(() => {
-              this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
+              // hiện cả cung chém
+              //this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
+
+              // chỉ hiện link web
+              this.marqueeStep = 0;
               this.triggerMarqueeLoop();
             }, 3000);
 
