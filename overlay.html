@@ -42,6 +42,28 @@
       animation: marquee-ultra-slow 22s linear forwards;
     }
 
+    /* HIỆU ỨNG 1: TỈ SỐ NẢY SỐ VÀ PHÁT SÁNG KHI THAY ĐỔI */
+    @keyframes score-pop {
+      0% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
+      40% { transform: scale(1.45); color: #fef08a; filter: drop-shadow(0 0 12px #f59e0b); }
+      70% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+    .animate-score {
+      display: inline-block;
+      animation: score-pop 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* HIỆU ỨNG 2: QUÂN TUYỂN PHÁT SÁNG VÀNG KIM (GOLD GLOW) */
+    @keyframes top-civ-glow {
+      0%, 100% { text-shadow: 0 0 6px rgba(250, 204, 21, 0.9), 0 0 12px rgba(234, 179, 8, 0.5); color: #fef08a; }
+      50% { text-shadow: 0 0 10px rgba(245, 158, 11, 1), 0 0 18px rgba(239, 68, 68, 0.7); color: #fbbf24; }
+    }
+    .top-civ-style {
+      animation: top-civ-glow 1.8s infinite ease-in-out;
+      font-weight: 900 !important;
+    }
+
     /* Bảng màu sắc tên Player AOE tiêu chuẩn */
     .p-color-0 { color: #60a5fa; }
     .p-color-1 { color: #f87171; }
@@ -95,7 +117,9 @@
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
             <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
-            <span class="text-amber-400 font-mono font-black uppercase text-right">
+            <span class="font-mono uppercase text-right flex items-center gap-0.5"
+                  :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
+              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[10px] text-amber-300">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
@@ -108,10 +132,11 @@
           </div>
           
           <div class="my-auto py-0.5">
-            <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5">
-              <span>{{ score.red }}</span>
+            <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5 overflow-hidden">
+              <!-- KHÓA KEY ĐỂ MỖI LẦN ĐIỂM TĂNG SẼ KÍCH HOẠT ANIMATION POP -->
+              <span :key="'red-'+score.red" class="animate-score">{{ score.red }}</span>
               <span class="text-slate-500 text-xl">-</span>
-              <span>{{ score.blue }}</span>
+              <span :key="'blue-'+score.blue" class="animate-score">{{ score.blue }}</span>
             </div>
           </div>
 
@@ -126,8 +151,10 @@
         <!-- CỘT 3: TEAM 2 (XANH) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
-            <span class="text-amber-400 font-mono font-black uppercase text-left">
+            <span class="font-mono uppercase text-left flex items-center gap-0.5"
+                  :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
+              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[10px] text-amber-300">⭐</span>
             </span>
             <span class="truncate text-right max-w-[110px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
@@ -146,7 +173,9 @@
           match: null,
           targetScore: 100,
           showMarquee: true,
-          marqueeStep: 0
+          marqueeStep: 0,
+          // DANH SÁCH QUÂN TUYỂN CẦN HIỆU ỨNG
+          topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"]
         }
       },
       computed: {
@@ -165,7 +194,6 @@
           }
           return { red, blue };
         },
-        // TÍNH TỔNG SỐ QUÂN CUNG VÀ CHÉM CỦA CẢ KÈO ĐẤU
         civStats() {
           let cung = 0, chem = 0;
           const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
@@ -186,7 +214,6 @@
           }
           return { cung, chem };
         },
-        // CHỮ CHẠY LUÂN PHIÊN
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
             return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
@@ -199,6 +226,12 @@
         getCivName(civ) {
           if (!civ || civ === 'Random') return '---';
           return String(civ).toUpperCase();
+        },
+        // HÀM CHECK QUÂN TUYỂN
+        isTopCiv(civ) {
+          if (!civ || civ === 'Random' || civ === '---') return false;
+          const upper = String(civ).toUpperCase();
+          return this.topCivs.some(k => upper.indexOf(k) !== -1);
         },
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
@@ -232,11 +265,7 @@
             this.showMarquee = false;
             
             setTimeout(() => {
-              // hiện cả cung chém
-              //this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
-
-              // chỉ hiện link web
-              this.marqueeStep = 0;
+              this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
               this.triggerMarqueeLoop();
             }, 3000);
 
