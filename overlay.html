@@ -117,10 +117,10 @@
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
             <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
-            <span class="font-mono uppercase text-right flex items-center gap-0.5"
+            <span class="font-mono uppercase text-right flex items-center gap-1.5"
                   :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
-              <!-- ĐÃ GIẢM KÍCH THƯỚC NGÔI SAO XUỐNG 8px -->
-              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
+              <!-- KHOẢNG CÁCH SAO ĐÃ ĐƯỢC TĂNG RỘNG RÃI HƠN -->
+              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300 mr-0.5">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
@@ -151,11 +151,11 @@
         <!-- CỘT 3: TEAM 2 (XANH) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
-            <span class="font-mono uppercase text-left flex items-center gap-0.5"
+            <span class="font-mono uppercase text-left flex items-center gap-1.5"
                   :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
-              <!-- ĐÃ GIẢM KÍCH THƯỚC NGÔI SAO XUỐNG 8px -->
-              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
+              <!-- KHOẢNG CÁCH SAO ĐÃ ĐƯỢC TĂNG RỘNG RÃI HƠN -->
+              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300 ml-0.5">⭐</span>
             </span>
             <span class="truncate text-right max-w-[110px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
@@ -216,7 +216,7 @@
         },
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
-            return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
+            return "LINK XEM LỊCH SỬ CÁC TRẬN ĐÃ ĐẤU:  DONATE88.GITHUB.IO/AOE-TRACKER/";
           } else {
             return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
           }
