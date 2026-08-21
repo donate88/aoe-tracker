@@ -119,7 +119,8 @@
             <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
             <span class="font-mono uppercase text-right flex items-center gap-0.5"
                   :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
-              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[10px] text-amber-300">⭐</span>
+              <!-- ĐÃ GIẢM KÍCH THƯỚC NGÔI SAO XUỐNG 8px -->
+              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
           </div>
@@ -133,7 +134,6 @@
           
           <div class="my-auto py-0.5">
             <div class="text-3xl font-black tracking-tight text-amber-400 flex items-center justify-center gap-1.5 overflow-hidden">
-              <!-- KHÓA KEY ĐỂ MỖI LẦN ĐIỂM TĂNG SẼ KÍCH HOẠT ANIMATION POP -->
               <span :key="'red-'+score.red" class="animate-score">{{ score.red }}</span>
               <span class="text-slate-500 text-xl">-</span>
               <span :key="'blue-'+score.blue" class="animate-score">{{ score.blue }}</span>
@@ -154,7 +154,8 @@
             <span class="font-mono uppercase text-left flex items-center gap-0.5"
                   :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
-              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[10px] text-amber-300">⭐</span>
+              <!-- ĐÃ GIẢM KÍCH THƯỚC NGÔI SAO XUỐNG 8px -->
+              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
             </span>
             <span class="truncate text-right max-w-[110px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
@@ -174,7 +175,6 @@
           targetScore: 100,
           showMarquee: true,
           marqueeStep: 0,
-          // DANH SÁCH QUÂN TUYỂN CẦN HIỆU ỨNG
           topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"]
         }
       },
@@ -227,7 +227,6 @@
           if (!civ || civ === 'Random') return '---';
           return String(civ).toUpperCase();
         },
-        // HÀM CHECK QUÂN TUYỂN
         isTopCiv(civ) {
           if (!civ || civ === 'Random' || civ === '---') return false;
           const upper = String(civ).toUpperCase();
