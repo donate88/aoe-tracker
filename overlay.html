@@ -29,7 +29,7 @@
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.4);
     }
 
-    /* Animation Chữ Chạy SIÊU CHẬM (25 giây) */
+    /* Animation Chữ Chạy SIÊU CHẬM (22 giây) */
     @keyframes marquee-ultra-slow {
       0% { transform: translateX(100%); opacity: 0; }
       3% { opacity: 1; }
@@ -39,7 +39,7 @@
     .run-marquee-ultra-slow {
       display: inline-block;
       white-space: nowrap;
-      animation: marquee-ultra-slow 25s linear forwards;
+      animation: marquee-ultra-slow 22s linear forwards;
     }
 
     /* Bảng màu sắc tên Player AOE tiêu chuẩn */
@@ -57,7 +57,7 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[500px]">
       
-      <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY LINK -->
+      <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY ĐAN XEN -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
           <!-- KHỐI MÁY XO -->
@@ -78,11 +78,11 @@
           </div>
         </div>
 
-        <!-- KHUNG DÒNG CHỮ CHẠY CHỈ HIỂN THỊ LINK -->
+        <!-- KHUNG DÒNG CHỮ CHẠY ĐAN XEN LINK & THỐNG KÊ CUNG - CHÉM -->
         <div class="flex-1 h-5 overflow-hidden bg-slate-950/80 border border-amber-500/30 rounded-t-lg flex items-center px-2 relative">
           <div v-if="showMarquee" class="w-full text-[11px] font-bold text-amber-300">
-            <span class="run-marquee-ultra-slow font-mono">
-              donate88.github.io/aoe-tracker/
+            <span class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
+              {{ currentMarqueeText }}
             </span>
           </div>
         </div>
@@ -115,7 +115,7 @@
             </div>
           </div>
 
-          <!-- THÔNG BÁO TRẬN: MÀU TRẮNG GAUZE BLUR GLOW (TẮT NHẤP NHÁY) -->
+          <!-- THÔNG BÁO TRẬN: MÀU TRẮNG GAUZE BLUR GLOW -->
           <div class="w-full bg-slate-950 py-0.5 border-t border-slate-800 flex justify-center items-center">
             <span class="text-[11px] font-black uppercase tracking-widest blur-text-white">
               TRẬN {{ match.games ? match.games.length : 1 }}
@@ -145,7 +145,8 @@
         return { 
           match: null,
           targetScore: 100,
-          showMarquee: true
+          showMarquee: true,
+          marqueeStep: 0 // 0: Hiển thị Link, 1: Hiển thị Thống kê Cung - Chém
         }
       },
       computed: {
@@ -163,6 +164,36 @@
             });
           }
           return { red, blue };
+        },
+        // TÍNH TỔNG SỐ QUÂN CUNG VÀ CHÉM CỦA CẢ KÈO ĐẤU
+        civStats() {
+          let cung = 0, chem = 0;
+          // Danh sách các quân Cung R / Cung T tiêu chuẩn
+          const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
+
+          if (this.match && this.match.games) {
+            this.match.games.forEach(g => {
+              const allCivs = [...(g.redCivs || []), ...(g.blueCivs || [])];
+              allCivs.forEach(c => {
+                if (!c || c === 'Random' || c === '---') return;
+                const upper = c.toUpperCase();
+                if (cungList.some(k => upper.includes(k))) {
+                  cung++;
+                } else {
+                  chem++;
+                }
+              });
+            });
+          }
+          return { cung, chem };
+        },
+        // CHỮ CHẠY ĐAN XEN LUÂN PHIÊN
+        currentMarqueeText() {
+          if (this.marqueeStep === 0) {
+            return "donate88.github.io/aoe-tracker/";
+          } else {
+            return `TỔNG SỐ QUÂN: CUNG ${this.civStats.cung} - ${this.civStats.chem} CHÉM`;
+          }
         }
       },
       methods: {
@@ -195,19 +226,21 @@
             }
           } catch(e) {}
         },
+        // VÒNG LẶP CHẠY CHỮ ĐAN XEN
         triggerMarqueeLoop() {
           this.showMarquee = true;
           
-          // Chạy 25s qua hết màn hình
+          // Chạy chữ 22 giây hết chiều ngang thanh bar
           setTimeout(() => {
             this.showMarquee = false;
             
-            // Nghỉ 15s rồi chạy lại
+            // Tắt chữ 8 giây rồi đổi trạng thái chữ tiếp theo
             setTimeout(() => {
+              this.marqueeStep = (this.marqueeStep + 1) % 2; // Đổi qua lại giữa 0 và 1
               this.triggerMarqueeLoop();
-            }, 15000);
+            }, 8000);
 
-          }, 25000);
+          }, 22000);
         }
       },
       mounted() {
