@@ -81,7 +81,6 @@
         <!-- KHUNG DÒNG CHỮ CHẠY ĐAN XEN LINK & THỐNG KÊ CUNG - CHÉM -->
         <div class="flex-1 h-5 overflow-hidden bg-slate-950/80 border border-amber-500/30 rounded-t-lg flex items-center px-2 relative">
           <div v-if="showMarquee" class="w-full text-[11px] font-bold text-amber-300">
-            <!-- DÙNG KEY ĐỂ PHÁT HIỆN ĐỔI CHỮ VÀ DỰNG LẠI ANIMATION -->
             <span :key="marqueeStep" class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
               {{ currentMarqueeText }}
             </span>
@@ -190,9 +189,9 @@
         // CHỮ CHẠY LUÂN PHIÊN
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
-            return "donate88.github.io/aoe-tracker/";
+            return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
           } else {
-            return `TỔNG SỐ QUÂN: CUNG ${this.civStats.cung} - ${this.civStats.chem} CHÉM`;
+            return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
           }
         }
       },
