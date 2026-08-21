@@ -82,10 +82,10 @@
       <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY ĐAN XEN -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
-          <!-- KHỐI MÁY XO -->
+          <!-- KHỐI MÁY XO (ƯU TIÊN LẤY TÊN PLAYER TỪ URL) -->
           <div class="bg-slate-950/90 border border-amber-500/50 px-2.5 py-0.5 rounded-t-lg shadow-lg">
             <span class="text-xs font-black uppercase effect-xo tracking-wider">
-              MÁY {{ match.streamerName || 'XO' }}
+              MÁY {{ playerOverride || match.streamerName || 'XO' }}
             </span>
           </div>
 
@@ -119,7 +119,6 @@
             <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
             <span class="font-mono uppercase text-right flex items-center gap-1.5"
                   :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
-              <!-- KHOẢNG CÁCH SAO ĐÃ ĐƯỢC TĂNG RỘNG RÃI HƠN -->
               <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300 mr-0.5">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
             </span>
@@ -154,7 +153,6 @@
             <span class="font-mono uppercase text-left flex items-center gap-1.5"
                   :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
-              <!-- KHOẢNG CÁCH SAO ĐÃ ĐƯỢC TĂNG RỘNG RÃI HƠN -->
               <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300 ml-0.5">⭐</span>
             </span>
             <span class="truncate text-right max-w-[110px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
@@ -172,7 +170,8 @@
       data() {
         return { 
           match: null,
-          targetScore: 5,
+          playerOverride: '', // BIẾN LƯU TÊN ĐƯỢC CẤP QUA URL (NẾU CÓ)
+          targetScore: 100,
           showMarquee: true,
           marqueeStep: 0,
           topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"]
@@ -216,7 +215,7 @@
         },
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
-            return "LINK XEM LỊCH SỬ CÁC TRẬN ĐÃ ĐẤU:  DONATE88.GITHUB.IO/AOE-TRACKER/";
+            return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
           } else {
             return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
           }
@@ -236,6 +235,9 @@
           const params = new URLSearchParams(window.location.search);
           const matchId = params.get('matchId');
           const streamer = params.get('streamer');
+          
+          // LẤY TÊN PLAYER TỪ URL (NẾU BẠN BÈ DÙNG CHUNG)
+          this.playerOverride = params.get('player') || '';
 
           try {
             const res = await fetch(API_URL + "?action=getInitialData");
