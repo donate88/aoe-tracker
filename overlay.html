@@ -14,7 +14,6 @@
       overflow: hidden; 
     }
 
-    /* Hiệu ứng chữ Máy XO */
     @keyframes glow-xo {
       0%, 100% { text-shadow: 0 0 8px #f59e0b, 0 0 15px #f59e0b; color: #fbbf24; }
       50% { text-shadow: 0 0 12px #ef4444, 0 0 22px #ef4444; color: #f87171; }
@@ -23,13 +22,11 @@
       animation: glow-xo 2s infinite ease-in-out;
     }
 
-    /* Hiệu ứng mờ mịn cho chữ TRẬN */
     .blur-text-white {
       color: #ffffff;
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.4);
     }
 
-    /* Animation Chữ Chạy (22 giây) */
     @keyframes marquee-ultra-slow {
       0% { transform: translateX(100%); opacity: 0; }
       3% { opacity: 1; }
@@ -42,7 +39,6 @@
       animation: marquee-ultra-slow 22s linear forwards;
     }
 
-    /* HIỆU ỨNG 1: TỈ SỐ NẢY SỐ VÀ PHÁT SÁNG KHI THAY ĐỔI */
     @keyframes score-pop {
       0% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
       40% { transform: scale(1.45); color: #fef08a; filter: drop-shadow(0 0 12px #f59e0b); }
@@ -54,7 +50,6 @@
       animation: score-pop 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
-    /* HIỆU ỨNG 2: QUÂN TUYỂN PHÁT SÁNG VÀNG KIM (GOLD GLOW) */
     @keyframes top-civ-glow {
       0%, 100% { text-shadow: 0 0 6px rgba(250, 204, 21, 0.9), 0 0 12px rgba(234, 179, 8, 0.5); color: #fef08a; }
       50% { text-shadow: 0 0 10px rgba(245, 158, 11, 1), 0 0 18px rgba(239, 68, 68, 0.7); color: #fbbf24; }
@@ -64,32 +59,28 @@
       font-weight: 900 !important;
     }
 
-    /* Bảng màu sắc tên Player AOE tiêu chuẩn */
-    .p-color-0 { color: #60a5fa; }
-    .p-color-1 { color: #f87171; }
-    .p-color-2 { color: #facc15; }
-    .p-color-3 { color: #c084fc; }
-    .p-color-4 { color: #38bdf8; }
-    .p-color-5 { color: #4ade80; }
-    .p-color-6 { color: #94a3b8; }
-    .p-color-7 { color: #f97316; }
+    /* KHUNG VIỀN TRẮNG MỜ MỎNG DÀNH CHO BẢNG QUÂN */
+    .civ-badge-box {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background-color: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.08);
+    }
   </style>
 </head>
 <body class="p-0 m-0">
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[500px]">
       
-      <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY ĐAN XEN -->
+      <!-- HÀNG TRÊN CÙNG -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
-          <!-- KHỐI MÁY XO (ƯU TIÊN LẤY TÊN PLAYER TỪ URL) -->
           <div class="bg-slate-950/90 border border-amber-500/50 px-2.5 py-0.5 rounded-t-lg shadow-lg">
             <span class="text-xs font-black uppercase effect-xo tracking-wider">
               MÁY {{ playerOverride || match.streamerName || 'XO' }}
             </span>
           </div>
 
-          <!-- KHỐI BẢNG QUÂN + KÈO -->
           <div class="bg-slate-950/90 border border-slate-700/80 px-2.5 py-0.5 rounded-t-lg shadow-lg flex items-center gap-1.5">
             <span class="text-xs font-black text-white uppercase tracking-wider">
               Bảng quân
@@ -100,7 +91,6 @@
           </div>
         </div>
 
-        <!-- KHUNG DÒNG CHỮ CHẠY ĐAN XEN LINK & THỐNG KÊ CUNG - CHÉM -->
         <div class="flex-1 h-5 overflow-hidden bg-slate-950/80 border border-amber-500/30 rounded-t-lg flex items-center px-2 relative">
           <div v-if="showMarquee" class="w-full text-[11px] font-bold text-amber-300">
             <span :key="marqueeStep" class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
@@ -115,13 +105,19 @@
         
         <!-- CỘT 1: TEAM 1 (ĐỎ) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
-          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
-            <span class="truncate text-left max-w-[110px]" :class="'p-color-' + (i % 8)">{{ p }}</span>
-            <span class="font-mono uppercase text-right flex items-center gap-1.5"
-                  :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
-              <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300 mr-0.5">⭐</span>
-              {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
+            <span class="truncate text-left max-w-[110px]" :style="{ color: getPlayerHexColor(match.redColors, i) }">
+              {{ p }}
             </span>
+            
+            <!-- KHUNG VIỀN TRẮNG MỜ MỎNG BAO TÊN QUÂN -->
+            <div class="civ-badge-box px-1.5 py-0.5 rounded flex items-center justify-center">
+              <span class="font-mono uppercase text-right flex items-center gap-1.5"
+                    :class="isTopCiv(latestGame ? latestGame.redCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
+                <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300 mr-0.5">⭐</span>
+                {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -139,7 +135,6 @@
             </div>
           </div>
 
-          <!-- THÔNG BÁO TRẬN -->
           <div class="w-full bg-slate-950 py-0.5 border-t border-slate-800 flex justify-center items-center">
             <span class="text-[11px] font-black uppercase tracking-widest blur-text-white">
               TRẬN {{ match.games ? match.games.length : 1 }}
@@ -149,13 +144,19 @@
 
         <!-- CỘT 3: TEAM 2 (XANH) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
-          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug">
-            <span class="font-mono uppercase text-left flex items-center gap-1.5"
-                  :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
-              {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
-              <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300 ml-0.5">⭐</span>
+          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
+            <!-- KHUNG VIỀN TRẮNG MỜ MỎNG BAO TÊN QUÂN -->
+            <div class="civ-badge-box px-1.5 py-0.5 rounded flex items-center justify-center">
+              <span class="font-mono uppercase text-left flex items-center gap-1.5"
+                    :class="isTopCiv(latestGame ? latestGame.blueCivs[i] : '') ? 'top-civ-style' : 'text-amber-400 font-black'">
+                {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
+                <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300 ml-0.5">⭐</span>
+              </span>
+            </div>
+
+            <span class="truncate text-right max-w-[110px]" :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
+              {{ p }}
             </span>
-            <span class="truncate text-right max-w-[110px]" :class="'p-color-' + ((i + 4) % 8)">{{ p }}</span>
           </div>
         </div>
 
@@ -170,7 +171,7 @@
       data() {
         return { 
           match: null,
-          playerOverride: '', // BIẾN LƯU TÊN ĐƯỢC CẤP QUA URL (NẾU CÓ)
+          playerOverride: '',
           targetScore: 100,
           showMarquee: true,
           marqueeStep: 0,
@@ -215,7 +216,7 @@
         },
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
-            return "LINK XEM LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
+            return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
           } else {
             return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
           }
@@ -231,12 +232,30 @@
           const upper = String(civ).toUpperCase();
           return this.topCivs.some(k => upper.indexOf(k) !== -1);
         },
+        getPlayerHexColor(colorArray, index, isBlueTeam = false) {
+          const aoeHexColors = [
+            '#60a5fa', // 0: P1 - Xanh lam
+            '#f97316', // 1: P2 - Cam
+            '#f87171', // 2: P3 - Đỏ
+            '#facc15', // 3: P4 - Vàng
+            '#4ade80', // 4: P5 - Xanh lá
+            '#94a3b8', // 5: P6 - Xám / Tím nhạt
+            '#c084fc', // 6: P7 - Nâu / Tím
+            '#38bdf8'  // 7: P8 - Cung nhạt
+          ];
+
+          if (colorArray && colorArray[index] !== undefined) {
+            const colorIdx = colorArray[index];
+            return aoeHexColors[colorIdx] || '#ffffff';
+          }
+
+          const defaultIdx = isBlueTeam ? ((index + 4) % 8) : (index % 8);
+          return aoeHexColors[defaultIdx];
+        },
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
           const matchId = params.get('matchId');
           const streamer = params.get('streamer');
-          
-          // LẤY TÊN PLAYER TỪ URL (NẾU BẠN BÈ DÙNG CHUNG)
           this.playerOverride = params.get('player') || '';
 
           try {
@@ -261,15 +280,12 @@
         },
         triggerMarqueeLoop() {
           this.showMarquee = true;
-          
           setTimeout(() => {
             this.showMarquee = false;
-            
             setTimeout(() => {
               this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
               this.triggerMarqueeLoop();
             }, 3000);
-
           }, 22000);
         }
       },
