@@ -56,7 +56,14 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[500px]">
       
-      <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY -->
+      <!-- LINK WEB GHIM CỐ ĐỊNH TRÊN CÙNG -->
+      <div class="w-full bg-slate-950/90 border border-amber-500/40 rounded-t-lg px-2 py-0.5 text-center mb-0.5 shadow-md">
+        <span class="text-[11px] font-black text-amber-400 tracking-wider font-mono uppercase">
+          LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/
+        </span>
+      </div>
+
+      <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY TỔNG CUNG - CHÉM -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
           <div class="bg-slate-950/90 border border-amber-500/50 px-2.5 py-0.5 rounded-t-lg shadow-lg">
@@ -75,10 +82,11 @@
           </div>
         </div>
 
+        <!-- DÒNG CHỮ CHẠY CHỈ HIỂN THỊ THỐNG KÊ CUNG-CHÉM TỪNG PLAYER -->
         <div class="flex-1 h-5 overflow-hidden bg-slate-950/80 border border-amber-500/30 rounded-t-lg flex items-center px-2 relative">
           <div v-if="showMarquee" class="w-full text-[11px] font-bold text-amber-300">
-            <span :key="marqueeStep" class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
-              {{ currentMarqueeText }}
+            <span class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
+              {{ playerCivStatsText }}
             </span>
           </div>
         </div>
@@ -90,12 +98,10 @@
         <!-- CỘT 1: TEAM 1 (ĐỎ) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <!-- TÊN GAME THỦ -->
             <span class="truncate text-left max-w-[100px]" :style="{ color: getPlayerHexColor(match.redColors, i) }">
               {{ p }}
             </span>
             
-            <!-- TÊN QUÂN VÀ LOẠI QUÂN (CUNG / CHÉM) -->
             <span class="font-mono uppercase text-right font-black flex items-center gap-1"
                   :style="{ color: getPlayerHexColor(match.redColors, i) }">
               <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
@@ -129,7 +135,6 @@
         <!-- CỘT 3: TEAM 2 (XANH) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <!-- TÊN QUÂN VÀ LOẠI QUÂN (CUNG / CHÉM) -->
             <span class="font-mono uppercase text-left font-black flex items-center gap-1"
                   :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
               <span class="text-[10px] mr-0.5 opacity-90">{{ getCivIcon(latestGame ? latestGame.blueCivs[i] : '') }}</span>
@@ -137,7 +142,6 @@
               <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
             </span>
 
-            <!-- TÊN GAME THỦ -->
             <span class="truncate text-right max-w-[100px]" :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
               {{ p }}
             </span>
@@ -158,9 +162,7 @@
           playerOverride: '',
           targetScore: 100,
           showMarquee: true,
-          marqueeStep: 0,
-          topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"],
-          currentDateTime: ''
+          topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"]
         }
       },
       computed: {
@@ -179,34 +181,56 @@
           }
           return { red, blue };
         },
-        civStats() {
-          let cung = 0, chem = 0;
-          const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
+        playerCivStatsText() {
+          if (!this.match || !this.match.games || this.match.games.length === 0) {
+            return "CUNG - CHÉM: CHƯA CÓ DỮ LIỆU";
+          }
 
-          if (this.match && this.match.games) {
-            this.match.games.forEach(g => {
-              const allCivs = [...(g.redCivs || []), ...(g.blueCivs || [])];
-              allCivs.forEach(c => {
-                if (!c || c === 'Random' || c === '---') return;
+          const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
+          const playerMap = {};
+
+          // Khởi tạo player team Đỏ
+          (this.match.redTeam || []).forEach(p => {
+            playerMap[p] = { cung: 0, chem: 0 };
+          });
+
+          // Khởi tạo player team Xanh
+          (this.match.blueTeam || []).forEach(p => {
+            playerMap[p] = { cung: 0, chem: 0 };
+          });
+
+          // Tính tổng Cung-Chém qua từng ván đấu cho riêng từng người
+          this.match.games.forEach(g => {
+            (g.redCivs || []).forEach((c, idx) => {
+              const pName = this.match.redTeam[idx];
+              if (pName && c && c !== 'Random' && c !== '---') {
                 const upper = String(c).toUpperCase();
                 if (cungList.some(k => upper.indexOf(k) !== -1)) {
-                  cung++;
+                  playerMap[pName].cung++;
                 } else {
-                  chem++;
+                  playerMap[pName].chem++;
                 }
-              });
+              }
             });
-          }
-          return { cung, chem };
-        },
-        currentMarqueeText() {
-          if (this.marqueeStep === 0) {
-            return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
-          } else if (this.marqueeStep === 1) {
-            return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
-          } else {
-            return `HÔM NAY: ${this.currentDateTime}`;
-          }
+
+            (g.blueCivs || []).forEach((c, idx) => {
+              const pName = this.match.blueTeam[idx];
+              if (pName && c && c !== 'Random' && c !== '---') {
+                const upper = String(c).toUpperCase();
+                if (cungList.some(k => upper.indexOf(k) !== -1)) {
+                  playerMap[pName].cung++;
+                } else {
+                  playerMap[pName].chem++;
+                }
+              }
+            });
+          });
+
+          const result = Object.keys(playerMap).map(p => {
+            return `${p} (${playerMap[p].cung}-${playerMap[p].chem})`;
+          });
+
+          return "CUNG - CHÉM: " + result.join(", ");
         }
       },
       methods: {
@@ -245,15 +269,6 @@
           const defaultIdx = isBlueTeam ? ((index + 4) % 8) : (index % 8);
           return aoeHexColors[defaultIdx];
         },
-        updateDateString() {
-          const now = new Date();
-          const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
-          const dayName = days[now.getDay() === 0 ? 6 : now.getDay() - 1];
-          const dateStr = String(now.getDate()).padStart(2, '0');
-          const monthStr = String(now.getMonth() + 1).padStart(2, '0');
-          const yearStr = now.getFullYear();
-          this.currentDateTime = `${dayName.toUpperCase()}, ${dateStr}/${monthStr}/${yearStr}`;
-        },
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
           const matchId = params.get('matchId');
@@ -285,17 +300,14 @@
           setTimeout(() => {
             this.showMarquee = false;
             setTimeout(() => {
-              this.marqueeStep = (this.marqueeStep + 1) % 3;
               this.triggerMarqueeLoop();
-            }, 3000);
+            }, 2000);
           }, 22000);
         }
       },
       mounted() {
-        this.updateDateString();
         this.fetchMatch();
         setInterval(this.fetchMatch, 3000);
-        setInterval(this.updateDateString, 60000);
         this.triggerMarqueeLoop();
       }
     }).mount('#app');
