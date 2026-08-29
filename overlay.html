@@ -56,13 +56,6 @@
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[500px]">
       
-      <!-- LINK WEB GHIM CỐ ĐỊNH TRÊN CÙNG -->
-      <div class="w-full bg-slate-950/90 border border-amber-500/40 rounded-t-lg px-2 py-0.5 text-center mb-0.5 shadow-md">
-        <span class="text-[11px] font-black text-amber-400 tracking-wider font-mono uppercase">
-          LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/
-        </span>
-      </div>
-
       <!-- HÀNG TRÊN CÙNG: MÁY XO | BẢNG QUÂN | DÒNG CHỮ CHẠY TỔNG CUNG - CHÉM -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
@@ -183,23 +176,20 @@
         },
         playerCivStatsText() {
           if (!this.match || !this.match.games || this.match.games.length === 0) {
-            return "CUNG - CHÉM: CHƯA CÓ DỮ LIỆU";
+            return "TỔNG CUNG - CHÉM: CHƯA CÓ DỮ LIỆU";
           }
 
           const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
           const playerMap = {};
 
-          // Khởi tạo player team Đỏ
           (this.match.redTeam || []).forEach(p => {
             playerMap[p] = { cung: 0, chem: 0 };
           });
 
-          // Khởi tạo player team Xanh
           (this.match.blueTeam || []).forEach(p => {
             playerMap[p] = { cung: 0, chem: 0 };
           });
 
-          // Tính tổng Cung-Chém qua từng ván đấu cho riêng từng người
           this.match.games.forEach(g => {
             (g.redCivs || []).forEach((c, idx) => {
               const pName = this.match.redTeam[idx];
@@ -230,7 +220,7 @@
             return `${p} (${playerMap[p].cung}-${playerMap[p].chem})`;
           });
 
-          return "CUNG - CHÉM: " + result.join(", ");
+          return "TỔNG CUNG - CHÉM: " + result.join(", ");
         }
       },
       methods: {
