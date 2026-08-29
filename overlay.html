@@ -28,16 +28,17 @@
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.4);
     }
 
+    /* ĐÃ GIẢM TỐC ĐỘ CHẠY CHỮ TỪ 22s LÊN 38s GIÚP LƯỚT CHẬM RÃI DỄ ĐỌC */
     @keyframes marquee-ultra-slow {
       0% { transform: translateX(100%); opacity: 0; }
-      3% { opacity: 1; }
-      97% { opacity: 1; }
+      2% { opacity: 1; }
+      98% { opacity: 1; }
       100% { transform: translateX(-100%); opacity: 0; }
     }
     .run-marquee-ultra-slow {
       display: inline-block;
       white-space: nowrap;
-      animation: marquee-ultra-slow 22s linear forwards;
+      animation: marquee-ultra-slow 38s linear forwards;
     }
 
     @keyframes score-pop {
@@ -75,7 +76,7 @@
           </div>
         </div>
 
-        <!-- DÒNG CHỮ CHẠY CHỈ HIỂN THỊ THỐNG KÊ CUNG-CHÉM TỪNG PLAYER -->
+        <!-- DÒNG CHỮ CHẠY HIỂN THỊ CẢ TỔNG TOÀN TRẬN & CHI TIẾT TỪNG PLAYER -->
         <div class="flex-1 h-5 overflow-hidden bg-slate-950/80 border border-amber-500/30 rounded-t-lg flex items-center px-2 relative">
           <div v-if="showMarquee" class="w-full text-[11px] font-bold text-amber-300">
             <span class="run-marquee-ultra-slow font-mono uppercase tracking-wider">
@@ -180,6 +181,7 @@
           }
 
           const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
+          let totalCung = 0, totalChem = 0;
           const playerMap = {};
 
           (this.match.redTeam || []).forEach(p => {
@@ -193,34 +195,38 @@
           this.match.games.forEach(g => {
             (g.redCivs || []).forEach((c, idx) => {
               const pName = this.match.redTeam[idx];
-              if (pName && c && c !== 'Random' && c !== '---') {
+              if (c && c !== 'Random' && c !== '---') {
                 const upper = String(c).toUpperCase();
                 if (cungList.some(k => upper.indexOf(k) !== -1)) {
-                  playerMap[pName].cung++;
+                  totalCung++;
+                  if (pName) playerMap[pName].cung++;
                 } else {
-                  playerMap[pName].chem++;
+                  totalChem++;
+                  if (pName) playerMap[pName].chem++;
                 }
               }
             });
 
             (g.blueCivs || []).forEach((c, idx) => {
               const pName = this.match.blueTeam[idx];
-              if (pName && c && c !== 'Random' && c !== '---') {
+              if (c && c !== 'Random' && c !== '---') {
                 const upper = String(c).toUpperCase();
                 if (cungList.some(k => upper.indexOf(k) !== -1)) {
-                  playerMap[pName].cung++;
+                  totalCung++;
+                  if (pName) playerMap[pName].cung++;
                 } else {
-                  playerMap[pName].chem++;
+                  totalChem++;
+                  if (pName) playerMap[pName].chem++;
                 }
               }
             });
           });
 
-          const result = Object.keys(playerMap).map(p => {
+          const playerDetails = Object.keys(playerMap).map(p => {
             return `${p} (${playerMap[p].cung}-${playerMap[p].chem})`;
           });
 
-          return "TỔNG CUNG - CHÉM: " + result.join(", ");
+          return `TỔNG CUNG - CHÉM: ${totalCung} - ${totalChem}  |  ${playerDetails.join(", ")}`;
         }
       },
       methods: {
@@ -292,7 +298,7 @@
             setTimeout(() => {
               this.triggerMarqueeLoop();
             }, 2000);
-          }, 22000);
+          }, 38000); // Đã tăng thời gian vòng lặp chờ khớp với animation 38s
         }
       },
       mounted() {
