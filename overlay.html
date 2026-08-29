@@ -84,22 +84,23 @@
         </div>
       </div>
 
-      <!-- KHUNG BẢNG QUÂN CHÍNH (ĐÃ NỚI KHOẢNG CÁCH NẰM THOÁNG HƠN) -->
+      <!-- KHUNG BẢNG QUÂN CHÍNH -->
       <div class="flex items-stretch justify-between bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden">
         
         <!-- CỘT 1: TEAM 1 (ĐỎ) -->
-        <div class="flex-1 px-4 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
-          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-4 text-sm font-bold leading-snug my-0.5">
+        <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
+          <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
             <!-- TÊN GAME THỦ -->
             <span class="truncate text-left max-w-[100px]" :style="{ color: getPlayerHexColor(match.redColors, i) }">
               {{ p }}
             </span>
             
-            <!-- TÊN QUÂN: BỎ KHUNG, BỎ NHẤP NHÁY, CÙNG MÀU VỚI TÊN PLAYER -->
+            <!-- TÊN QUÂN VÀ LOẠI QUÂN (CUNG / CHÉM) -->
             <span class="font-mono uppercase text-right font-black flex items-center gap-1"
                   :style="{ color: getPlayerHexColor(match.redColors, i) }">
               <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
+              <span class="text-[10px] ml-0.5 opacity-90">{{ getCivIcon(latestGame ? latestGame.redCivs[i] : '') }}</span>
             </span>
           </div>
         </div>
@@ -126,11 +127,12 @@
         </div>
 
         <!-- CỘT 3: TEAM 2 (XANH) -->
-        <div class="flex-1 px-4 py-1.5 bg-black/80 flex flex-col justify-center">
-          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-4 text-sm font-bold leading-snug my-0.5">
-            <!-- TÊN QUÂN: BỎ KHUNG, BỎ NHẤP NHÁY, CÙNG MÀU VỚI TÊN PLAYER -->
+        <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
+          <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
+            <!-- TÊN QUÂN VÀ LOẠI QUÂN (CUNG / CHÉM) -->
             <span class="font-mono uppercase text-left font-black flex items-center gap-1"
                   :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
+              <span class="text-[10px] mr-0.5 opacity-90">{{ getCivIcon(latestGame ? latestGame.blueCivs[i] : '') }}</span>
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
               <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
             </span>
@@ -157,7 +159,8 @@
           targetScore: 100,
           showMarquee: true,
           marqueeStep: 0,
-          topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"]
+          topCivs: ["SHANG", "ASSY", "HIT", "HITTITE", "PER", "PERSIAN", "PAL", "PALMYRAN", "YAM", "YAMATO", "ROM", "ROMAN"],
+          currentDateTime: ''
         }
       },
       computed: {
@@ -199,8 +202,10 @@
         currentMarqueeText() {
           if (this.marqueeStep === 0) {
             return "LINK WEB LƯU LỊCH SỬ ĐẤU : DONATE88.GITHUB.IO/AOE-TRACKER/";
-          } else {
+          } else if (this.marqueeStep === 1) {
             return `TỔNG CUNG - CHÉM: ${this.civStats.cung} - ${this.civStats.chem}`;
+          } else {
+            return `HÔM NAY: ${this.currentDateTime}`;
           }
         }
       },
@@ -214,8 +219,13 @@
           const upper = String(civ).toUpperCase();
           return this.topCivs.some(k => upper.indexOf(k) !== -1);
         },
+        getCivIcon(civ) {
+          if (!civ || civ === 'Random' || civ === '---') return '';
+          const upper = String(civ).toUpperCase();
+          const cungList = ["BABY", "ASSY", "HIT", "EGYP", "EGYPT", "PHO", "SUM", "SHANG", "PAL"];
+          return cungList.some(k => upper.indexOf(k) !== -1) ? '🏹' : '⚔️';
+        },
         getPlayerHexColor(colorArray, index, isBlueTeam = false) {
-          // BẢNG MÀU CHUẨN AOE F2
           const aoeHexColors = [
             '#60a5fa', // 0: P1 - Xanh lam
             '#f97316', // 1: P2 - Cam
@@ -234,6 +244,15 @@
 
           const defaultIdx = isBlueTeam ? ((index + 4) % 8) : (index % 8);
           return aoeHexColors[defaultIdx];
+        },
+        updateDateString() {
+          const now = new Date();
+          const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+          const dayName = days[now.getDay() === 0 ? 6 : now.getDay() - 1];
+          const dateStr = String(now.getDate()).padStart(2, '0');
+          const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+          const yearStr = now.getFullYear();
+          this.currentDateTime = `${dayName.toUpperCase()}, ${dateStr}/${monthStr}/${yearStr}`;
         },
         async fetchMatch() {
           const params = new URLSearchParams(window.location.search);
@@ -266,15 +285,17 @@
           setTimeout(() => {
             this.showMarquee = false;
             setTimeout(() => {
-              this.marqueeStep = (this.marqueeStep === 0) ? 1 : 0;
+              this.marqueeStep = (this.marqueeStep + 1) % 3;
               this.triggerMarqueeLoop();
             }, 3000);
           }, 22000);
         }
       },
       mounted() {
+        this.updateDateString();
         this.fetchMatch();
         setInterval(this.fetchMatch, 3000);
+        setInterval(this.updateDateString, 60000);
         this.triggerMarqueeLoop();
       }
     }).mount('#app');
