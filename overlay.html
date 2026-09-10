@@ -89,12 +89,12 @@
         <!-- CỘT 1: TEAM 1 (ĐỎ) -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(p, i) in match.redTeam" :key="'red-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="truncate text-left max-w-[100px]" :style="{ color: getPlayerHexColor(match.redColors, i) }">
+            <span class="truncate text-left max-w-[100px]" :style="{ color: getPlayerHexColor(currentRedColors, i) }">
               {{ p }}
             </span>
             
             <span class="font-mono uppercase text-right font-black flex items-center gap-1"
-                  :style="{ color: getPlayerHexColor(match.redColors, i) }">
+                  :style="{ color: getPlayerHexColor(currentRedColors, i) }">
               <span v-if="isTopCiv(latestGame ? latestGame.redCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
               {{ getCivName(latestGame ? latestGame.redCivs[i] : '') }}
               <span class="text-[10px] ml-0.5 opacity-90">{{ getCivIcon(latestGame ? latestGame.redCivs[i] : '') }}</span>
@@ -127,13 +127,13 @@
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(p, i) in match.blueTeam" :key="'blue-'+i" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
             <span class="font-mono uppercase text-left font-black flex items-center gap-1"
-                  :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
+                  :style="{ color: getPlayerHexColor(currentBlueColors, i, true) }">
               <span class="text-[10px] mr-0.5 opacity-90">{{ getCivIcon(latestGame ? latestGame.blueCivs[i] : '') }}</span>
               {{ getCivName(latestGame ? latestGame.blueCivs[i] : '') }}
               <span v-if="isTopCiv(latestGame ? latestGame.blueCivs[i] : '')" class="text-[8px] leading-none text-amber-300">⭐</span>
             </span>
 
-            <span class="truncate text-right max-w-[100px]" :style="{ color: getPlayerHexColor(match.blueColors, i, true) }">
+            <span class="truncate text-right max-w-[100px]" :style="{ color: getPlayerHexColor(currentBlueColors, i, true) }">
               {{ p }}
             </span>
           </div>
@@ -161,6 +161,12 @@
           return (this.match && this.match.games && this.match.games.length > 0) 
             ? this.match.games[this.match.games.length - 1] 
             : null;
+        },
+        currentRedColors() {
+          return (this.latestGame && this.latestGame.redColors) ? this.latestGame.redColors : (this.match ? this.match.redColors : []);
+        },
+        currentBlueColors() {
+          return (this.latestGame && this.latestGame.blueColors) ? this.latestGame.blueColors : (this.match ? this.match.blueColors : []);
         },
         score() {
           let red = 0, blue = 0;
@@ -243,24 +249,23 @@
           return cungList.some(k => upper.indexOf(k) !== -1) ? '🏹' : '⚔️';
         },
         getPlayerHexColor(colorArray, index, isBlueTeam = false) {
-          // BẢNG MÀU HEX CHUẨN 100% TƯƠNG ỨNG MÀU THỰC TẾ TRONG GAME AOE (0 - 7)
+          // BẢNG 8 MÀU CHUẨN KHI LÊN OVERLAY (KHỚP HOÀN TOÀN TỪNG NHÀ P1 - P8)
           const aoeHexColors = [
-            '#60a5fa', // 0: P1 - Xanh lam (Blue)
-            '#f97316', // 1: P2 - Cam (Orange)
-            '#ef4444', // 2: P3 - Đỏ (Red)
-            '#facc15', // 3: P4 - Vàng (Yellow)
-            '#22c55e', // 4: P5 - Xanh lá (Green)
-            '#a855f7', // 5: P6 - Tím nhạt / Xám (Purple)
-            '#a16207', // 6: P7 - Nâu (Brown)
-            '#06b6d4'  // 7: P8 - Xanh Cung nhạt (Cyan)
+            '#60a5fa', // 0: P1 - Xanh lam (#60a5fa) -> Xeôm
+            '#f97316', // 1: P2 - Cam (#f97316) -> Cyrus / Alcibiades
+            '#ef4444', // 2: P3 - Đỏ (#ef4444)
+            '#facc15', // 3: P4 - Vàng (#facc15) -> Lugalbanda
+            '#22c55e', // 4: P5 - Xanh lá (#22c55e) -> Ahiram
+            '#9ca3af', // 5: P6 - Xám (#9ca3af) -> Hattusili
+            '#a16207', // 6: P7 - Nâu (#a16207) -> Andriscus
+            '#06b6d4'  // 7: P8 - Xanh Cung Cyan (#06b6d4) -> Marcus Aurelius
           ];
-        
+
           if (colorArray && colorArray[index] !== undefined) {
             const colorIdx = colorArray[index];
             return aoeHexColors[colorIdx] || '#ffffff';
           }
-        
-          // Fallback chuẩn màu nhà mặc định AOE
+
           const defaultIdx = isBlueTeam ? ((index + 4) % 8) : (index % 8);
           return aoeHexColors[defaultIdx];
         },
