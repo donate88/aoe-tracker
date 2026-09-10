@@ -243,23 +243,24 @@
           return cungList.some(k => upper.indexOf(k) !== -1) ? '🏹' : '⚔️';
         },
         getPlayerHexColor(colorArray, index, isBlueTeam = false) {
-          // BẢNG MÀU HEX ĐỒNG BỘ CHUẨN KẾT QUẢ PYTHON
+          // BẢNG MÀU HEX CHUẨN 100% TƯƠNG ỨNG MÀU THỰC TẾ TRONG GAME AOE (0 - 7)
           const aoeHexColors = [
-            '#0e72ed', // 0: P1 - Xanh lam (#60a5fa)
-            '#f97316', // 1: P2 - Cam (#f97316)
-            '#ed1111', // 2: P3 - Đỏ (#f87171)
-            '#facc15', // 3: P4 - Vàng (#facc15)
-            '#1eeb69', // 4: P5 - Xanh lá (#4ade80)
-            '#00d2ff', // 5: P6 - Xanh Cung nhạt (#00d2ff)
-            '#a6a3a8', // 6: P7 - Nâu / Tím nhạt (#8a75a1)
-            '#38bdf8'  // 7: P8 - Xanh lam sáng (#38bdf8)
+            '#60a5fa', // 0: P1 - Xanh lam (Blue)
+            '#f97316', // 1: P2 - Cam (Orange)
+            '#ef4444', // 2: P3 - Đỏ (Red)
+            '#facc15', // 3: P4 - Vàng (Yellow)
+            '#22c55e', // 4: P5 - Xanh lá (Green)
+            '#a855f7', // 5: P6 - Tím nhạt / Xám (Purple)
+            '#a16207', // 6: P7 - Nâu (Brown)
+            '#06b6d4'  // 7: P8 - Xanh Cung nhạt (Cyan)
           ];
-
+        
           if (colorArray && colorArray[index] !== undefined) {
             const colorIdx = colorArray[index];
             return aoeHexColors[colorIdx] || '#ffffff';
           }
-
+        
+          // Fallback chuẩn màu nhà mặc định AOE
           const defaultIdx = isBlueTeam ? ((index + 4) % 8) : (index % 8);
           return aoeHexColors[defaultIdx];
         },
