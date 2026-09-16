@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>AOE Overlay OBS - Google Sheet API</title>
+  <title>AOE Overlay OBS - Dynamic Colors Fixed</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
@@ -41,8 +41,8 @@
         <!-- TEAM ĐỎ -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(player, index) in match.redTeam" :key="'red-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index, 'red')">{{ player }}</span>
-            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index, 'red')">
+            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index)">{{ player }}</span>
+            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index)">
               <span v-if="isTopCiv(civAt(latestGame && latestGame.redCivs, index))" class="text-[8px] text-amber-300">⭐</span>
               {{ getCivName(civAt(latestGame && latestGame.redCivs, index)) }} <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.redCivs, index)) }}</span>
             </span>
@@ -59,12 +59,12 @@
         <!-- TEAM XANH -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(player, index) in match.blueTeam" :key="'blue-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index, 'blue')">
+            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index)">
               <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.blueCivs, index)) }}</span>
               {{ getCivName(civAt(latestGame && latestGame.blueCivs, index)) }}
               <span v-if="isTopCiv(civAt(latestGame && latestGame.blueCivs, index))" class="text-[8px] text-amber-300">⭐</span>
             </span>
-            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index, 'blue')">{{ player }}</span>
+            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index)">{{ player }}</span>
           </div>
         </div>
 
@@ -75,16 +75,16 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbyyzz3o-A56_J3ikoo_8dOM3ilBSeQUNUr7NW30fQfw-iHk_f9wRsXA8T_SokeUu-CU/exec';
     
-    // BẢNG 8 MÀU CHUẨN AOE (P1 -> P8)
+    // BẢNG 8 MÀU CHUẨN ĐÚNG THEO INDEX (0 - 7) TỪ PYTHON GỬI LÊN
     const COLORS = [
-      '#60a5fa', // 0: P1 - Lam
+      '#60a5fa', // 0: P1 - Xanh lam
       '#fb923c', // 1: P2 - Cam
       '#ef4444', // 2: P3 - Đỏ
       '#facc15', // 3: P4 - Vàng
       '#4ade80', // 4: P5 - Xanh lá
-      '#d1d5db', // 5: P6 - Xám
+      '#d1d5db', // 5: P6 - Xám tím
       '#a16207', // 6: P7 - Nâu
-      '#22d3ee'  // 7: P8 - Cyan
+      '#22d3ee'  // 7: P8 - Cyan / Xanh Cung
     ];
 
     Vue.createApp({
@@ -101,13 +101,13 @@
           return this.match && this.match.games && this.match.games.length ? this.match.games[this.match.games.length - 1] : null; 
         },
         currentRedColors() { 
-          if (this.latestGame && Array.isArray(this.latestGame.redColors) && this.latestGame.redColors.length) {
+          if (this.latestGame && Array.isArray(this.latestGame.redColors) && this.latestGame.redColors.length > 0) {
             return this.latestGame.redColors;
           }
           return (this.match && this.match.redColors) || []; 
         },
         currentBlueColors() { 
-          if (this.latestGame && Array.isArray(this.latestGame.blueColors) && this.latestGame.blueColors.length) {
+          if (this.latestGame && Array.isArray(this.latestGame.blueColors) && this.latestGame.blueColors.length > 0) {
             return this.latestGame.blueColors;
           }
           return (this.match && this.match.blueColors) || []; 
@@ -145,18 +145,18 @@
         },
         isTopCiv(civ) { return civ && this.topCivs.some(k => String(civ).toUpperCase().includes(k)); },
         
-        getPlayerHexColor(colors, index, team = 'red') { 
+        getPlayerHexColor(colors, index) { 
           if (Array.isArray(colors) && colors[index] !== undefined && colors[index] !== null) {
             const colorIdx = parseInt(colors[index], 10);
             if (!isNaN(colorIdx) && COLORS[colorIdx]) {
               return COLORS[colorIdx];
             }
           }
-          // Fallback màu theo từng phe nếu mảng bị trống
-          return team === 'red' ? '#ef4444' : '#60a5fa';
+          // Nếu chưa có mảng màu thì tạm thời trả về màu trắng thay vì màu đỏ/xanh chung
+          return '#ffffff'; 
         },
-        playerStyle(colors, index, team) { 
-          return { color: this.getPlayerHexColor(colors, index, team) }; 
+        playerStyle(colors, index) { 
+          return { color: this.getPlayerHexColor(colors, index) }; 
         },
         
         async fetchMatch() {
@@ -165,13 +165,15 @@
           try {
             const response = await fetch(API_URL + '?action=getInitialData&ts=' + Date.now());
             const data = await response.json();
+            const liveMatch = data.currentMatch || (data.matches || []).find(item => item.status === 'LIVE') || (data.matches || [])[0] || null;
             
-            // Lấy match từ currentMatch hoặc mảng matches
-            let liveMatch = data.currentMatch;
-            if (!liveMatch && data.matches && data.matches.length) {
-              liveMatch = data.matches.find(item => item.status === 'LIVE') || data.matches[0];
-            }
             this.match = liveMatch;
+
+            // In log debug để kiểm tra mảng màu nhận về trong Browser Console (F12)
+            if (liveMatch) {
+              console.log("-> Match Red Colors:", this.currentRedColors);
+              console.log("-> Match Blue Colors:", this.currentBlueColors);
+            }
           } catch (error) { 
             console.error('Apps Script API error', error); 
           }
