@@ -145,15 +145,14 @@
         },
         isTopCiv(civ) { return civ && this.topCivs.some(k => String(civ).toUpperCase().includes(k)); },
         
-        getPlayerHexColor(colors, index) { 
-          if (Array.isArray(colors) && colors[index] !== undefined && colors[index] !== null) {
-            const colorIdx = parseInt(colors[index], 10);
-            if (!isNaN(colorIdx) && COLORS[colorIdx]) {
-              return COLORS[colorIdx];
-            }
+        getPlayerHexColor(colors, index) {
+          const colorId = Number(colors && colors[index]);
+        
+          if (Number.isInteger(colorId) && COLORS[colorId]) {
+            return COLORS[colorId];
           }
-          // Nếu chưa có mảng màu thì tạm thời trả về màu trắng thay vì màu đỏ/xanh chung
-          return '#ffffff'; 
+        
+          return '#ffffff';
         },
         playerStyle(colors, index) { 
           return { color: this.getPlayerHexColor(colors, index) }; 
