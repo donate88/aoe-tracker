@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>AOE Overlay OBS - Dynamic Colors Fixed</title>
+  <title>AOE Overlay OBS - Google Sheet</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
@@ -18,8 +18,6 @@
 <body class="p-0 m-0">
   <div id="app" class="w-full">
     <div v-if="match" class="flex flex-col w-[500px]">
-      
-      <!-- HÀNG TRÊN CÙNG: STREAMER & BẢNG QUÂN -->
       <div class="flex justify-between items-center gap-2 mb-1">
         <div class="flex items-center gap-2 shrink-0">
           <div class="bg-slate-950/90 border border-amber-500/50 px-2.5 py-0.5 rounded-t-lg shadow-lg">
@@ -35,89 +33,51 @@
         </div>
       </div>
 
-      <!-- KHUNG THÔNG TIN TRẬN ĐẤU CHÍNH -->
       <div class="flex items-stretch justify-between bg-black/95 text-white border-2 border-slate-800 shadow-2xl h-[115px] rounded-r-xl rounded-b-xl overflow-hidden">
-        
-        <!-- TEAM ĐỎ -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(player, index) in match.redTeam" :key="'red-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index)">{{ player }}</span>
-            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index)">
+            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index, player)">{{ player }}</span>
+            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index, player)">
               <span v-if="isTopCiv(civAt(latestGame && latestGame.redCivs, index))" class="text-[8px] text-amber-300">⭐</span>
               {{ getCivName(civAt(latestGame && latestGame.redCivs, index)) }} <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.redCivs, index)) }}</span>
             </span>
           </div>
         </div>
 
-        <!-- TỈ SỐ -->
         <div class="w-[95px] shrink-0 flex flex-col justify-between items-center bg-slate-900 border-r border-slate-800 text-center">
           <div class="w-full bg-red-600 text-white font-black text-xs py-1 uppercase tracking-wider">CHẠM 100</div>
           <div class="my-auto text-3xl font-black text-amber-400">{{ score.red }} <span class="text-slate-500 text-xl">-</span> {{ score.blue }}</div>
           <div class="w-full bg-slate-950 py-0.5 border-t border-slate-800"><span class="text-[11px] font-black uppercase tracking-widest blur-text-white">TRẬN {{ match.games ? match.games.length : 1 }}</span></div>
         </div>
 
-        <!-- TEAM XANH -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(player, index) in match.blueTeam" :key="'blue-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index)">
+            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index, player)">
               <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.blueCivs, index)) }}</span>
               {{ getCivName(civAt(latestGame && latestGame.blueCivs, index)) }}
               <span v-if="isTopCiv(civAt(latestGame && latestGame.blueCivs, index))" class="text-[8px] text-amber-300">⭐</span>
             </span>
-            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index)">{{ player }}</span>
+            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index, player)">{{ player }}</span>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbyyzz3o-A56_J3ikoo_8dOM3ilBSeQUNUr7NW30fQfw-iHk_f9wRsXA8T_SokeUu-CU/exec';
-    
-    // BẢNG 8 MÀU CHUẨN ĐÚNG THEO INDEX (0 - 7) TỪ PYTHON GỬI LÊN
     const COLORS = [
-      '#60a5fa', // 0: P1 - Xanh lam
-      '#fb923c', // 1: P2 - Cam
-      '#ef4444', // 2: P3 - Đỏ
-      '#facc15', // 3: P4 - Vàng
-      '#4ade80', // 4: P5 - Xanh lá
-      '#d1d5db', // 5: P6 - Xám tím
-      '#a16207', // 6: P7 - Nâu
-      '#22d3ee'  // 7: P8 - Cyan / Xanh Cung
+      '#60a5fa', '#fb923c', '#ef4444', '#facc15', '#4ade80', '#d1d5db', '#a16207', '#22d3ee'
     ];
-
+    const PLAYER_COLORS = { xo: '#60a5fa', gilgamesh: '#ef4444', yoa: '#facc15', mithridates: '#a16207', hippocrates: '#ef4444', enmerkar: '#facc15', tudhalyas: '#a16207', 'hamilcar barca': '#fb923c', astyages: '#4ade80', 'marcus aurelius': '#d1d5db', himiko: '#22d3ee' };
     Vue.createApp({
-      data() { 
-        return { 
-          match: null, 
-          playerOverride: '', 
-          showMarquee: true, 
-          topCivs: ['SHANG','ASSY','HIT','HITTITE','PER','PERSIAN','PAL','PALMYRAN','YAM','YAMATO','ROM','ROMAN'] 
-        }; 
-      },
+      data() { return { match: null, playerOverride: '', showMarquee: true, topCivs: ['SHANG','ASSY','HIT','HITTITE','PER','PERSIAN','PAL','PALMYRAN','YAM','YAMATO','ROM','ROMAN'] }; },
       computed: {
-        latestGame() { 
-          return this.match && this.match.games && this.match.games.length ? this.match.games[this.match.games.length - 1] : null; 
-        },
-        currentRedColors() { 
-          if (this.latestGame && Array.isArray(this.latestGame.redColors) && this.latestGame.redColors.length > 0) {
-            return this.latestGame.redColors;
-          }
-          return (this.match && this.match.redColors) || []; 
-        },
-        currentBlueColors() { 
-          if (this.latestGame && Array.isArray(this.latestGame.blueColors) && this.latestGame.blueColors.length > 0) {
-            return this.latestGame.blueColors;
-          }
-          return (this.match && this.match.blueColors) || []; 
-        },
+        latestGame() { return this.match && this.match.games && this.match.games.length ? this.match.games[this.match.games.length - 1] : null; },
+        currentRedColors() { return this.latestGame && this.latestGame.redColors || this.match && this.match.redColors || []; },
+        currentBlueColors() { return this.latestGame && this.latestGame.blueColors || this.match && this.match.blueColors || []; },
         score() {
-          return (this.match && this.match.games || []).reduce((result, game) => { 
-            if (game.winner === 'RED') result.red++; 
-            if (game.winner === 'BLUE') result.blue++; 
-            return result; 
-          }, { red: 0, blue: 0 });
+          return (this.match && this.match.games || []).reduce((result, game) => { if (game.winner === 'RED') result.red++; if (game.winner === 'BLUE') result.blue++; return result; }, { red: 0, blue: 0 });
         },
         playerCivStatsText() {
           if (!this.match || !this.match.games || !this.match.games.length) return 'TỔNG CUNG - CHÉM: CHƯA CÓ DỮ LIỆU';
@@ -139,54 +99,21 @@
       methods: {
         civAt(list, index) { return list && list[index] || ''; },
         getCivName(civ) { return !civ || civ === 'Random' ? '---' : String(civ).toUpperCase(); },
-        getCivIcon(civ) { 
-          if (!civ || civ === 'Random' || civ === '---') return ''; 
-          return ['BABY','ASSY','HIT','EGYP','EGYPT','PHO','SUM','SHANG','PAL'].some(k => String(civ).toUpperCase().includes(k)) ? '🏹' : '⚔️'; 
-        },
+        getCivIcon(civ) { if (!civ || civ === 'Random' || civ === '---') return ''; return ['BABY','ASSY','HIT','EGYP','EGYPT','PHO','SUM','SHANG','PAL'].some(k => String(civ).toUpperCase().includes(k)) ? '🏹' : '⚔️'; },
         isTopCiv(civ) { return civ && this.topCivs.some(k => String(civ).toUpperCase().includes(k)); },
-        
-        getPlayerHexColor(colors, index) { 
-          if (Array.isArray(colors) && colors[index] !== undefined && colors[index] !== null) {
-            const colorIdx = parseInt(colors[index], 10);
-            if (!isNaN(colorIdx) && COLORS[colorIdx]) {
-              return COLORS[colorIdx];
-            }
-          }
-          // Nếu chưa có mảng màu thì tạm thời trả về màu trắng thay vì màu đỏ/xanh chung
-          return '#ffffff'; 
-        },
-        playerStyle(colors, index) { 
-          return { color: this.getPlayerHexColor(colors, index) }; 
-        },
-        
+        getPlayerHexColor(colors, index, player) { return PLAYER_COLORS[String(player || '').trim().toLowerCase()] || COLORS[colors && colors[index]] || COLORS[index] || '#fff'; },
+        playerStyle(colors, index, player) { return { color: this.getPlayerHexColor(colors, index, player) }; },
         async fetchMatch() {
           const query = new URLSearchParams(location.search);
           this.playerOverride = query.get('player') || '';
           try {
-            const response = await fetch(API_URL + '?action=getInitialData&ts=' + Date.now());
+            const response = await fetch(API_URL + '?action=getInitialData');
             const data = await response.json();
-            const liveMatch = data.currentMatch || (data.matches || []).find(item => item.status === 'LIVE') || (data.matches || [])[0] || null;
-            
-            this.match = liveMatch;
-
-            // In log debug để kiểm tra mảng màu nhận về trong Browser Console (F12)
-            if (liveMatch) {
-              console.log("-> Match Red Colors:", this.currentRedColors);
-              console.log("-> Match Blue Colors:", this.currentBlueColors);
-            }
-          } catch (error) { 
-            console.error('Apps Script API error', error); 
-          }
+            this.match = data.currentMatch || (data.matches || []).find(item => item.status === 'LIVE') || (data.matches || [])[0] || null;
+          } catch (error) { console.error('Google Sheet API error', error); }
         }
       },
-      mounted() { 
-        this.fetchMatch(); 
-        setInterval(this.fetchMatch, 3000); 
-        setInterval(() => { 
-          this.showMarquee = false; 
-          setTimeout(() => { this.showMarquee = true; }, 2000); 
-        }, 40000); 
-      }
+      mounted() { this.fetchMatch(); setInterval(this.fetchMatch, 3000); setInterval(() => { this.showMarquee = false; setTimeout(() => { this.showMarquee = true; }, 2000); }, 40000); }
     }).mount('#app');
   </script>
 </body>
