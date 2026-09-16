@@ -41,8 +41,8 @@
         <!-- TEAM ĐỎ -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center border-r border-slate-800">
           <div v-for="(player, index) in match.redTeam" :key="'red-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index)">{{ player }}</span>
-            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index)">
+            <span class="truncate text-left max-w-[100px]" :style="playerStyle(currentRedColors, index, 'red')">{{ player }}</span>
+            <span class="font-mono uppercase text-right font-black flex items-center gap-1" :style="playerStyle(currentRedColors, index, 'red')">
               <span v-if="isTopCiv(civAt(latestGame && latestGame.redCivs, index))" class="text-[8px] text-amber-300">⭐</span>
               {{ getCivName(civAt(latestGame && latestGame.redCivs, index)) }} <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.redCivs, index)) }}</span>
             </span>
@@ -59,12 +59,12 @@
         <!-- TEAM XANH -->
         <div class="flex-1 px-3 py-1.5 bg-black/80 flex flex-col justify-center">
           <div v-for="(player, index) in match.blueTeam" :key="'blue-'+index" class="flex justify-between items-center gap-2 text-sm font-bold leading-snug my-0.5">
-            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index)">
+            <span class="font-mono uppercase text-left font-black flex items-center gap-1" :style="playerStyle(currentBlueColors, index, 'blue')">
               <span class="text-[10px]">{{ getCivIcon(civAt(latestGame && latestGame.blueCivs, index)) }}</span>
               {{ getCivName(civAt(latestGame && latestGame.blueCivs, index)) }}
               <span v-if="isTopCiv(civAt(latestGame && latestGame.blueCivs, index))" class="text-[8px] text-amber-300">⭐</span>
             </span>
-            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index)">{{ player }}</span>
+            <span class="truncate text-right max-w-[100px]" :style="playerStyle(currentBlueColors, index, 'blue')">{{ player }}</span>
           </div>
         </div>
 
@@ -73,19 +73,18 @@
   </div>
 
   <script>
-    // ĐƯỜNG DẪN GOOGLE APPS SCRIPT CỦA BẠN
     const API_URL = 'https://script.google.com/macros/s/AKfycbyyzz3o-A56_J3ikoo_8dOM3ilBSeQUNUr7NW30fQfw-iHk_f9wRsXA8T_SokeUu-CU/exec';
     
-    // BẢNG 8 MÀU HEX CHUẨN ĐỘNG (0 -> 7 TƯƠNG ỨNG TỪ PYTHON VỀ APPS SCRIPT)
+    // BẢNG 8 MÀU CHUẨN AOE (P1 -> P8)
     const COLORS = [
-      '#60a5fa', // 0: P1 - Xanh lam
+      '#60a5fa', // 0: P1 - Lam
       '#fb923c', // 1: P2 - Cam
       '#ef4444', // 2: P3 - Đỏ
       '#facc15', // 3: P4 - Vàng
       '#4ade80', // 4: P5 - Xanh lá
-      '#d1d5db', // 5: P6 - Xám tím
+      '#d1d5db', // 5: P6 - Xám
       '#a16207', // 6: P7 - Nâu
-      '#22d3ee'  // 7: P8 - Cyan / Xanh Cung
+      '#22d3ee'  // 7: P8 - Cyan
     ];
 
     Vue.createApp({
@@ -102,10 +101,16 @@
           return this.match && this.match.games && this.match.games.length ? this.match.games[this.match.games.length - 1] : null; 
         },
         currentRedColors() { 
-          return (this.latestGame && this.latestGame.redColors) || (this.match && this.match.redColors) || []; 
+          if (this.latestGame && Array.isArray(this.latestGame.redColors) && this.latestGame.redColors.length) {
+            return this.latestGame.redColors;
+          }
+          return (this.match && this.match.redColors) || []; 
         },
         currentBlueColors() { 
-          return (this.latestGame && this.latestGame.blueColors) || (this.match && this.match.blueColors) || []; 
+          if (this.latestGame && Array.isArray(this.latestGame.blueColors) && this.latestGame.blueColors.length) {
+            return this.latestGame.blueColors;
+          }
+          return (this.match && this.match.blueColors) || []; 
         },
         score() {
           return (this.match && this.match.games || []).reduce((result, game) => { 
@@ -140,14 +145,19 @@
         },
         isTopCiv(civ) { return civ && this.topCivs.some(k => String(civ).toUpperCase().includes(k)); },
         
-        // ÉP HIỂN THỊ MÀU ĐỘNG 100% THEO MẢNG COLORS ĐƯỢC PYTHON & APPS SCRIPT ĐẨY VỀ
-        getPlayerHexColor(colors, index) { 
-          if (colors && colors[index] !== undefined && COLORS[colors[index]]) {
-            return COLORS[colors[index]];
+        getPlayerHexColor(colors, index, team = 'red') { 
+          if (Array.isArray(colors) && colors[index] !== undefined && colors[index] !== null) {
+            const colorIdx = parseInt(colors[index], 10);
+            if (!isNaN(colorIdx) && COLORS[colorIdx]) {
+              return COLORS[colorIdx];
+            }
           }
-          return '#ffffff'; 
+          // Fallback màu theo từng phe nếu mảng bị trống
+          return team === 'red' ? '#ef4444' : '#60a5fa';
         },
-        playerStyle(colors, index) { return { color: this.getPlayerHexColor(colors, index) }; },
+        playerStyle(colors, index, team) { 
+          return { color: this.getPlayerHexColor(colors, index, team) }; 
+        },
         
         async fetchMatch() {
           const query = new URLSearchParams(location.search);
@@ -155,7 +165,13 @@
           try {
             const response = await fetch(API_URL + '?action=getInitialData&ts=' + Date.now());
             const data = await response.json();
-            this.match = data.currentMatch || (data.matches || []).find(item => item.status === 'LIVE') || (data.matches || [])[0] || null;
+            
+            // Lấy match từ currentMatch hoặc mảng matches
+            let liveMatch = data.currentMatch;
+            if (!liveMatch && data.matches && data.matches.length) {
+              liveMatch = data.matches.find(item => item.status === 'LIVE') || data.matches[0];
+            }
+            this.match = liveMatch;
           } catch (error) { 
             console.error('Apps Script API error', error); 
           }
