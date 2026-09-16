@@ -101,17 +101,14 @@
           return this.match && this.match.games && this.match.games.length ? this.match.games[this.match.games.length - 1] : null; 
         },
         currentRedColors() { 
-          const lg = this.latestGame;
-          // Chỉ dùng màu từ latestGame nếu có ít nhất 1 màu hợp lệ
-          if (lg && Array.isArray(lg.redColors) && lg.redColors.some(c => c !== null && c !== undefined)) {
-            return lg.redColors;
+          if (this.latestGame && Array.isArray(this.latestGame.redColors) && this.latestGame.redColors.length > 0) {
+            return this.latestGame.redColors;
           }
           return (this.match && this.match.redColors) || []; 
         },
         currentBlueColors() { 
-          const lg = this.latestGame;
-          if (lg && Array.isArray(lg.blueColors) && lg.blueColors.some(c => c !== null && c !== undefined)) {
-            return lg.blueColors;
+          if (this.latestGame && Array.isArray(this.latestGame.blueColors) && this.latestGame.blueColors.length > 0) {
+            return this.latestGame.blueColors;
           }
           return (this.match && this.match.blueColors) || []; 
         },
@@ -148,12 +145,15 @@
         },
         isTopCiv(civ) { return civ && this.topCivs.some(k => String(civ).toUpperCase().includes(k)); },
         
-        getPlayerHexColor(colors, index) {
-          const colorId = Number(colors && colors[index]);
-          if (Number.isInteger(colorId) && COLORS[colorId]) {
-            return COLORS[colorId];
+        getPlayerHexColor(colors, index) { 
+          if (Array.isArray(colors) && colors[index] !== undefined && colors[index] !== null) {
+            const colorIdx = parseInt(colors[index], 10);
+            if (!isNaN(colorIdx) && COLORS[colorIdx]) {
+              return COLORS[colorIdx];
+            }
           }
-          return '#ffffff';
+          // Nếu chưa có mảng màu thì tạm thời trả về màu trắng thay vì màu đỏ/xanh chung
+          return '#ffffff'; 
         },
         playerStyle(colors, index) { 
           return { color: this.getPlayerHexColor(colors, index) }; 
@@ -169,18 +169,10 @@
             
             this.match = liveMatch;
 
-            // Debug log chi tiết
+            // In log debug để kiểm tra mảng màu nhận về trong Browser Console (F12)
             if (liveMatch) {
-              const lg = liveMatch.games && liveMatch.games.length ? liveMatch.games[liveMatch.games.length - 1] : null;
-              console.log("=== MATCH DATA ===");
-              console.log("Red Team:", liveMatch.redTeam);
-              console.log("Blue Team:", liveMatch.blueTeam);
-              console.log("Match-level Red Colors:", liveMatch.redColors);
-              console.log("Match-level Blue Colors:", liveMatch.blueColors);
-              console.log("Latest Game Red Colors:", lg && lg.redColors);
-              console.log("Latest Game Blue Colors:", lg && lg.blueColors);
-              console.log("=> Final Red Colors:", this.currentRedColors);
-              console.log("=> Final Blue Colors:", this.currentBlueColors);
+              console.log("-> Match Red Colors:", this.currentRedColors);
+              console.log("-> Match Blue Colors:", this.currentBlueColors);
             }
           } catch (error) { 
             console.error('Apps Script API error', error); 
